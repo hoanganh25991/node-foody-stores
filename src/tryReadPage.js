@@ -6,12 +6,13 @@ const tryReadPage = async (homepage) => {
   const page = await browser.newPage();
   await page.goto(homepage);
   await page.waitForSelector('img', config.waitForSelector)
-
-
-
   const pageInfo = await page.evaluate(async () => {
+    const trackWindowInnerHeight = [];
     const forcePageLoadMoreContent = async () => {
-      window.scrollBy(0, window.innerHeight);
+      const body = document.body;
+      const documentCurrHeight = body.clientHeight
+      trackWindowInnerHeight.push(documentCurrHeight)
+      window.scrollBy(0, documentCurrHeight);
       const waitTime = 20;
       await new Promise(resolve => {
         setTimeout(() => {
@@ -26,7 +27,7 @@ const tryReadPage = async (homepage) => {
     const province = provinceDiv.getAttribute("ng-init")
     const contentContainerDiv = document.querySelector("div.content-container")
     const contentItemNodeList = contentContainerDiv.querySelectorAll("div.content-item")
-    return {province, numContentItems: contentItemNodeList.length}
+    return {province, numContentItems: contentItemNodeList.length, trackWindowInnerHeight}
   }, );
   // Clear browser before out
   await browser.close()
