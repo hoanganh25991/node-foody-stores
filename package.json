@@ -7,7 +7,8 @@
   "devDependencies": {
     "lint-staged": "^4.0.0",
     "pipe-to-browser": "^1.0.4",
-    "prettier": "^1.4.4"
+    "prettier": "^1.4.4",
+    "husky": "^0.13.4"
   },
   "scripts": {
     "precommit": "lint-staged",
