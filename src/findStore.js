@@ -56,25 +56,28 @@ const findStore = async (homepage) => {
 
   // await page.screenshot({path: `s4.png`})
 
-  await steps.map(async (selector, index) => {
-    const e = await page.$(selector);
-    if(e){
-       console.log("See e")
-       await e.click();
-       await defer(1)
-       await page.screenshot({path: `s${index}.png`})
-     }else{
-       console.log("Not see e")
-     }
-  })
+  // await steps.map(async (selector, index) => {
+  //   const e = await page.$(selector);
+  //   if(e){
+  //      console.log("See e")
+  //      await e.click();
+  //      await defer(1)
+  //      await page.screenshot({path: `s${index}.png`})
+  //    }else{
+  //      console.log("Not see e")
+  //    }
+  // })
+  //
+  // // await defer(5);
+  // await page.evaluate(() => {
+  //   window.location.href = "https://www.google.com.vn/?gfe_rd=cr&dcr=0&ei=8hTKWbOkBYXM8gf_zoagDA"
+  //   return;
+  // });
+  //
+  // await defer(2)
 
-  // await defer(5);
-  await page.evaluate(() => {
-    window.location.href = "https://www.google.com.vn/?gfe_rd=cr&dcr=0&ei=8hTKWbOkBYXM8gf_zoagDA"
-    return;
-  });
-
-  await defer(2)
+  // await page.select('#tbt > ul > li:nth-child(7) > select', '11'); // single selection
+  await page.setContent(`<h1>Hello</h1>`)
 
   await page.screenshot({path: `after.png`})
 
