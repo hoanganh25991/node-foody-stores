@@ -1,30 +1,28 @@
-const puppeteer = require('puppeteer');
-const {puppeteer : config} = require("./config")
+const puppeteer = require("puppeteer")
+const { puppeteer: config } = require("./config")
 const defer = require("./defer")
 
 const dumpFrameTree = (frame, indent) => {
-  console.log(indent + frame.url());
-  for (let child of frame.childFrames())
-    dumpFrameTree(child, indent + '  ');
+  console.log(indent + frame.url())
+  for (let child of frame.childFrames()) dumpFrameTree(child, indent + "  ")
 }
 
-const findStore = async (homepage) => {
-
-  const browser = await puppeteer.launch(config.launch);
-  const page = await browser.newPage();
-  await page.goto(homepage);
+const findStore = async homepage => {
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await page.goto(homepage)
   await defer(3)
-  const popup = await page.$("#popup-choose-category > ul > li:nth-child(1) > a");
-  await popup.click();
-  await defer(1);
-  await page.screenshot({path: `before.png`})
+  const popup = await page.$("#popup-choose-category > ul > li:nth-child(1) > a")
+  await popup.click()
+  await defer(1)
+  await page.screenshot({ path: `before.png` })
 
   const steps = [
     "#searchFormTop > div > a",
     "#search-filter-dis-4",
     "#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)",
     "#search-filter-cate-11",
-    "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue",
+    "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue"
   ]
 
   // const s0 = await page.$(steps[0]);
@@ -32,8 +30,6 @@ const findStore = async (homepage) => {
   //   await s0.click();
   //   await page.screenshot({path: `s0.png`})
   // }
-
-
 
   // const s1 = await page.$(steps[1]);
   // if(s1){
@@ -77,9 +73,9 @@ const findStore = async (homepage) => {
   // await defer(2)
 
   // await page.select('#tbt > ul > li:nth-child(7) > select', '11'); // single selection
-  await page.setContent(`<h1>Hello</h1>`)
+  // await page.setContent(`<h1>Hello</h1>`)
 
-  await page.screenshot({path: `after.png`})
+  await page.screenshot({ path: `after.png` })
 
   // dumpFrameTree(page.mainFrame(), '');
 
@@ -145,8 +141,6 @@ const findStore = async (homepage) => {
   await browser.close()
   // Return
   return "hello"
-};
+}
 
-var exports = module.exports = findStore
-
-
+var exports = (module.exports = findStore)
