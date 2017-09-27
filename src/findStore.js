@@ -29,6 +29,8 @@ const c = {
 
 const screenshotDir = "screenshot"
 
+const contentItemSelector = "#result-box > div.row-view > div > div > div"
+
 const findStore = async () => {
   const browser = await puppeteer.launch(config.launch)
   const page = await browser.newPage()
@@ -72,33 +74,40 @@ const findStore = async () => {
   await page.waitForSelector(resultSelector)
 
   const seeResult = await page.evaluate(async () => {
+    const contentItemSelector = "#result-box > div.row-view > div > div > div"
     const defer = async waitTime => await new Promise(resolve => setTimeout(resolve, waitTime * 1000))
-    const forcePageLoadMoreContent = async (waitTime = null) => {
+    const forcePageLoadMoreContent = async (waitForFunction = () => true, options = { timeout: 30 }) => {
       const body = document.body
       const documentCurrHeight = body.clientHeight
       window.scrollBy(0, documentCurrHeight)
-      waitTime = waitTime ? waitTime : 10
-      await defer(waitTime)
+      await defer(1)
+      let count = 0
+      const { timeout } = options
+      while (!waitForFunction() && count < timeout) {
+        await defer(1)
+        count++
+      }
     }
 
     // Wait for items load
-    await forcePageLoadMoreContent(3)
-    await forcePageLoadMoreContent(3)
-    await forcePageLoadMoreContent(3)
+    await forcePageLoadMoreContent()
 
     const loadMoreButton = document.querySelector("#scrollLoadingPage")
+
+    let currNumItems = document.querySelectorAll(contentItemSelector).length
 
     let allItemsLoaded = false
     while (!allItemsLoaded) {
       loadMoreButton.click()
-      await forcePageLoadMoreContent(3)
-      await forcePageLoadMoreContent(3)
-      await forcePageLoadMoreContent(3)
+      await forcePageLoadMoreContent(() => {
+        const next = document.querySelectorAll(contentItemSelector).length
+        return next > currNumItems
+      })
       const loadButtonIsHidden = loadMoreButton.offsetParent === null
       if (loadButtonIsHidden) allItemsLoaded = true
     }
 
-    const contentItems = document.querySelectorAll("#result-box > div.row-view > div > div > div")
+    const contentItems = document.querySelectorAll(contentItemSelector)
     return { numItems: contentItems.length }
   })
 
