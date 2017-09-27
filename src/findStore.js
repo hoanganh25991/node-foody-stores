@@ -20,7 +20,8 @@ const findStore = async homepage => {
   const filterE = await page.$("#searchFormTop > div > a")
   await filterE.click()
 
-  await page.waitForSelector("#fdDlgSearchFilter > div.sf-right")
+  // await page.waitForSelector("#fdDlgSearchFilter > div.sf-right")
+  await defer(10)
   console.log("After click do you see filterContent")
 
   const s1 = await page.$("#search-filter-dis-4")
