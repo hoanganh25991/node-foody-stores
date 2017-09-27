@@ -15,24 +15,29 @@ const findStore = async homepage => {
     width: 1200,
     height: 1014
   })
-  await defer(3)
+  page.on("console", (...args) => {
+    for (let i = 0; i < args.length; ++i) console.log(`${i}: ${args[i]}`)
+  })
+
+  await defer(1)
+  // Click to dimiss popup
   const popup = await page.$("#popup-choose-category > ul > li:nth-child(1) > a")
   await popup.click()
   await defer(1)
   await page.screenshot({ path: `before.png` })
 
-  // Try to click on select box
-  const bound = await page.evaluate(() => {
-    const selectBox = document.querySelector("#tbt > ul > li:nth-child(7) > select")
-    const DOMbound = selectBox.getBoundingClientRect()
-    const { x, y, width, height } = DOMbound
-    return { x, y, width, height }
+  await page.evaluate(() => {
+    document.addEventListener("click", () => console.log("adf"))
+    console.log("hello")
+    return
   })
-  console.log(bound)
-  // await page.mouse.click(bound.x + 5, bound.y + 5)
-  await page.touchscreen.tap(bound.x + bound.width / 2, bound.y + bound.height / 2)
-  await defer(3)
 
+  // await page.mouse.click(790, 620); // Try to click on selectbox
+  await page.mouse.click(265, 600) // Try to click on "Gần tôi"
+  // const e = await page.$("#tbt > ul > li:nth-child(2) > a") // Try to click on "Gần tôi"
+  // await e.click();
+
+  await defer(6)
   await page.screenshot({ path: `after.png` })
   await browser.close()
   return "hello"
