@@ -22,7 +22,7 @@ const clickAndWait = page => async ({ selector, waitFor = "body" }, index) => {
   logWithInfo(`Find ${selector}: ${Boolean(stepButton)}`)
   await stepButton.click()
   await page.waitForSelector(waitFor, timeout.store(5))
-  await screenshot(page)({ path: `step${index}.jpeg`, quality: 100 })
+  await screenshot(page)({ path: `step${index}.jpeg`, quality: 20 })
 }
 
 var exports = (module.exports = {
