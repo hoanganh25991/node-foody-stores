@@ -2,21 +2,6 @@ const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
 const defer = require("./defer")
 
-const dumpFrameTree = (frame, indent) => {
-  console.log(indent + frame.url())
-  for (let child of frame.childFrames()) dumpFrameTree(child, indent + "  ")
-}
-
-const dismisPopup = async page => async selector => {
-  const popup = await page.$(selector)
-  await popup.click()
-  /**
-   * We check offsetParent as NULL to check if element visible or not
-   * @see https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom#21696585
-   */
-  await page.waitForFunction(`document.querySelector(${selector}).offsetParent === null`)
-}
-
 const timeout = {
   timeoutCount: 0, // count as seconds
   store: (timeout, type = "s") => {
@@ -41,9 +26,18 @@ const timeout = {
   }
 }
 
-timeout.store(5)
+const dismisPopup = page => async selector => {
+  const popup = await page.$(selector)
+  await popup.click()
+  /**
+   * We check offsetParent as NULL to check if element visible or not
+   * @see https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom#21696585
+   */
+  const cmd = `document.querySelector("${selector}").offsetParent === null`
+  await page.waitForFunction(cmd)
+}
 
-const clickAndWait = async page => async ({ selector, waitFor = "body" }, index) => {
+const clickAndWait = page => async ({ selector, waitFor = "body" }, index) => {
   const stepButton = await page.$(selector)
   await stepButton.click()
   await page.waitForSelector(waitFor, timeout.store(5))
