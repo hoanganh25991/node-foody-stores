@@ -40,7 +40,7 @@ const dismisPopup = page => async selector => {
 const clickAndWait = page => async ({ selector, waitFor = "body" }, index) => {
   const stepButton = await page.$(selector)
   await stepButton.click()
-  await page.waitForSelector(waitFor, timeout.store(5))
+  await page.waitForSelector(waitFor)
   await page.screenshot({ path: `step${index}.png` })
 }
 
@@ -60,9 +60,25 @@ const findStore = async homepage => {
     { selector: "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue", waitFor: "" }
   ]
 
-  await steps.map(async ({ selector, waitFor }, index) => {
-    await clickAndWait(page)({ selector, waitFor }, index)
-  })
+  /**
+   * @notice
+   * Please remeber that map/forEach CANT run async/await in concept of
+   * Run for index 0, then run for index 1,...
+   * callback will be executed
+   * after running map, we have [(executed), (executed), (executed),...]
+   * then await [(),(),()]
+   * >>> this is just await all
+   *
+   * Please read reduce function, to see exactly how to QUEUE IT
+   */
+  // await steps.map(async ({ selector, waitFor }, index) => {
+  //   await clickAndWait(page)({ selector, waitFor }, index)
+  // })
+
+  steps.reduce(async (carry, { selector, waitFor }, index) => {
+    await carry
+    return clickAndWait(page)({ selector, waitFor }, index)
+  }, Promise.resolve(console.log("Starting await queue...")))
 
   timeout.log()
 
