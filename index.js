@@ -2,23 +2,21 @@ const findStore = require("./src/findStore")
 const logWithInfo = require("./src/logWithInfo")
 const logExactErrMsg = require("./src/logExactErrMsg")
 
-const run = async function(){
-  const homepage = "https://www.foody.vn/#/places";
-  // Info we are finding page link
-  const pageInfo = await findStore(homepage)
+const run = async function() {
+  const pageInfo = await findStore()
   console.log(pageInfo)
 }
 
 const crawling = async () => {
-  try{
+  try {
     await run()
-  }catch(err){
+  } catch (err) {
     logExactErrMsg(err)
-  }finally{
+  } finally {
     // Auto re run
     // setTimeout(crawling, 6000)
     logWithInfo("==============COMPLETE CRAWLING FOODY==============")
-    process.exit();
+    process.exit()
   }
 }
 
