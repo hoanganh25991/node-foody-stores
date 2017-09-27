@@ -107,8 +107,22 @@ const findStore = async () => {
       if (loadButtonIsHidden) allItemsLoaded = true
     }
 
-    const contentItems = document.querySelectorAll(contentItemSelector)
-    return { numItems: contentItems.length }
+    const nodeList = document.querySelectorAll(contentItemSelector)
+    const items = []
+    for (let i = 0; i < nodeList.length; i++) {
+      items.push(nodeList[i])
+    }
+
+    const readItemInfo = item => {
+      const imgUrl = item.querySelector("img")
+      const storeName = item.querySelector("h2").innerText
+      const address = item.querySelector("div.result-address").innerText
+      return { imgUrl, storeName, address }
+    }
+
+    const itemsInfo = items.map(item => readItemInfo(item))
+
+    return { numItems: nodeList.length, itemsInfo }
   })
 
   console.log(seeResult)
@@ -119,3 +133,16 @@ const findStore = async () => {
 }
 
 var exports = (module.exports = findStore)
+
+const s = []
+const click = async () => {}
+
+s.forEach(async selector => {
+  await click(selector)
+})
+
+const a = async () => {
+  await setTimout(console.log("b"))
+}
+a()
+console.log("a")
