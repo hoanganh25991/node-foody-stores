@@ -80,30 +80,28 @@ const loginDescription = [
       {
         title: `Click Đăng nhập, to submit`,
         click: `#bt_submit`
+      },
+      {
+        title: `Wait for go back to homepage`,
+        waitForFunction: [`window.location.href.startsWith("https://www.foody.vn")`, { timeout: 60 * 1000 }]
+      },
+      {
+        title: `Current location`,
+        evaluate: [
+          function() {
+            return { currentLocation: window.location.href }
+          }
+        ]
       }
-      // {
-      //   title: `Wait for go back to homepage`,
-      //   waitForFunction: [`window.location.href.startsWith("https://www.foody.vn")`, { timeout: 40 * 1000 }]
-      // },
-      // {
-      //   title: `Just wait 20s`,
-      //   waitFor: 20*1000
-      // }
-      // {
-      //   title: `Current location`,
-      //   evaluate: () => {return window.location.href}
-      // }
     ]
   }
 ]
 
 const queueAwaitList = lastResult => arr => async callback => {
-  const result = await arr.reduce(async (carry, awaitAction) => {
+  return await arr.reduce(async (carry, awaitAction) => {
     const lastResult = await carry
     return callback(lastResult)(awaitAction)
   }, lastResult)
-  const nextResult = Object.assign(lastResult, result)
-  return nextResult
 }
 
 const doAction = (page, subLevel = 0) => lastResult => async action => {
@@ -114,19 +112,21 @@ const doAction = (page, subLevel = 0) => lastResult => async action => {
   if (hasChildActions) {
     const currSubLevel = subLevel + 1
     const callback = doAction(page, currSubLevel)
-    const result = await queueAwaitList(lastResult)(actions)(callback)
-    const nextResult = Object.assign(lastResult, result)
-    return nextResult
+    return await queueAwaitList(lastResult)(actions)(callback)
   }
   const actionName = Object.keys(action).filter(actionName => actionName !== "title")[0]
   const param = action[actionName]
   const args = typeof param === "string" ? [param] : param
-  const result = await page[actionName](...args)
+  let result
+  try {
+    result = await page[actionName](...args)
+  } catch (err) {
+    logExactErrMsg(err)
+    result = { [Math.floor(Math.random() * 1000)]: `Fail at: ${title}` }
+  }
   const imgName = title.replace(/[^a-zA-Z]/g, "")
   await page.screenshot({ path: `${screenshotDir}/${imgName}.jpg` })
-  // const nextResult = Object.assign(lastResult, result)
-  const fakeResult = { [Math.floor(Math.random() * 1000)]: title }
-  const nextResult = Object.assign(lastResult, fakeResult)
+  const nextResult = Object.assign(lastResult, result)
   return nextResult
 }
 
@@ -154,9 +154,6 @@ const findStore = async () => {
   await readDescription(page)(loginDescription)
 
   logWithInfo(`networkRequest.length: ${networkRequest.length}`)
-
-  const url = await page.url()
-  console.log("url", url)
   await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
   await browser.close()
   return "hello"
