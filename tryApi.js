@@ -7,6 +7,8 @@ const launchConfig = {
   args: ["--no-sandbox", "--disable-setuid-sandbox"]
 }
 
+const screenshotDir = "screenshot"
+
 /**
  * Emulate mobile device
  */
@@ -49,23 +51,51 @@ const launchConfig = {
 // })
 
 // Another example with fs
-const fs = require("fs")
+// const fs = require("fs")
+//
+// puppeteer.launch(launchConfig).then(async browser => {
+//   const page = await browser.newPage()
+//   page.on("console", console.log)
+//   await page.exposeFunction("readfile", async filePath => {
+//     return new Promise((resolve, reject) => {
+//       fs.readFile(filePath, "utf8", (err, text) => {
+//         if (err) reject(err)
+//         else resolve(text)
+//       })
+//     })
+//   })
+//   await page.evaluate(async () => {
+//     // use window.readfile to read contents of a file
+//     const content = await window.readfile("./package.json")
+//     console.log(content)
+//   })
+//   await browser.close()
+// })
+
+const pageWithAlotImages =
+  "https://www.foody.vn/ho-chi-minh/an-vat-via-he-tai-quan-2?c=an-vat-via-he&page=5&categorygroup=food"
+
+// puppeteer.launch(launchConfig).then(async browser => {
+//   console.time("Launch without load image")
+//   const page = await browser.newPage();
+//   await page.setRequestInterceptionEnabled(true);
+//   page.on('request', interceptedRequest => {
+//     if (interceptedRequest.url.endsWith('.png') || interceptedRequest.url.endsWith('.jpg') || interceptedRequest.url.endsWith('.jpeg'))
+//       interceptedRequest.abort();
+//     else
+//       interceptedRequest.continue();
+//   });
+//   await page.goto(pageWithAlotImages);
+//   await page.screenshot({path: `${screenshotDir}/page-without-images.jpeg`})
+//   await browser.close();
+//   console.timeEnd("Launch without load image")
+// });
 
 puppeteer.launch(launchConfig).then(async browser => {
+  console.time("Launch load image")
   const page = await browser.newPage()
-  page.on("console", console.log)
-  await page.exposeFunction("readfile", async filePath => {
-    return new Promise((resolve, reject) => {
-      fs.readFile(filePath, "utf8", (err, text) => {
-        if (err) reject(err)
-        else resolve(text)
-      })
-    })
-  })
-  await page.evaluate(async () => {
-    // use window.readfile to read contents of a file
-    const content = await window.readfile("./package.json")
-    console.log(content)
-  })
+  await page.goto(pageWithAlotImages)
+  await page.screenshot({ path: `${screenshotDir}/page-without-images.jpeg` })
   await browser.close()
+  console.timeEnd("Launch load image")
 })
