@@ -36,6 +36,12 @@ const findStore = async () => {
   const page = await browser.newPage()
   await page.goto(homepage)
   await page.setViewport({ width: 1200, height: 600 })
+  await page.setRequestInterceptionEnabled(true)
+  page.on("request", interceptedRequest => {
+    if (interceptedRequest.url.endsWith(".png") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
+    else interceptedRequest.continue()
+  })
+
   await dismisPopup(page)("#popup-choose-category > ul > li:nth-child(1) > a")
   await screenshot(page)({ path: `${screenshotDir}/before.jpeg`, quality: 20 })
 
@@ -133,16 +139,3 @@ const findStore = async () => {
 }
 
 var exports = (module.exports = findStore)
-
-const s = []
-const click = async () => {}
-
-s.forEach(async selector => {
-  await click(selector)
-})
-
-const a = async () => {
-  await setTimout(console.log("b"))
-}
-a()
-console.log("a")
