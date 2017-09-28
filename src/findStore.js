@@ -19,14 +19,6 @@ const steps = [
 const resultSelector =
   "#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side > div.head-result.d_resultfilter"
 
-const c = {
-  loginButton: "#accountmanager > a",
-  clickLogin: "#fdDlgLogin > div.frame > div.btns.col2.bottom > a.btn.btn-login",
-  emailInput: "#Email",
-  passInput: "#Password",
-  submitButton: "#bt_submit"
-}
-
 const screenshotDir = "screenshot"
 
 const contentItemSelector = "#result-box > div.row-view > div > div > div"
@@ -88,6 +80,10 @@ const loginDescription = [
       {
         title: `Click Đăng nhập, to submit`,
         click: `#bt_submit`
+      },
+      {
+        title: `Wait for go back to homepage`,
+        waitForFunction: `window.location.href==="https://www.foody.vn/#/places"`
       }
     ]
   }
@@ -100,14 +96,15 @@ const finishAwaitList = arr => async callback => {
   }, console.log("Finish awaitList"))
 }
 
-const doAction = page => async action => {
+const doAction = (page, subLevel = 0) => async action => {
   const { title } = action
-  logWithInfo(title)
+  logWithInfo(title, subLevel)
   const { actions } = action
 
   const hasChildActions = Boolean(actions)
   if (hasChildActions) {
-    await finishAwaitList(actions)(doAction(page))
+    const currSubLevel = subLevel + 1
+    await finishAwaitList(actions)(doAction(page, currSubLevel))
     return
   }
 
