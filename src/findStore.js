@@ -6,6 +6,7 @@ const logExactErrMsg = require("./logExactErrMsg")
 const { screenshot, dismisPopup, clickAndWait } = require("./pageUtils")
 
 const homepage = "https://www.foody.vn/#/places"
+const viewport = { width: 1200, height: 600 }
 
 const steps = [
   { selector: "#searchFormTop > div > a", waitFor: "#fdDlgSearchFilter > div.sf-right" },
@@ -30,11 +31,102 @@ const screenshotDir = "screenshot"
 
 const contentItemSelector = "#result-box > div.row-view > div > div > div"
 
+const loginDescription = [
+  {
+    title: `Dismiss popup`,
+    click: `#popup-choose-category > ul > li:nth-child(1) > a`
+  },
+  {
+    title: `Wait for popup disappear`,
+    waitForFunction: `document.querySelector("#popup-choose-category > ul > li:nth-child(1) > a").offsetParent === null`
+  },
+  {
+    title: `Login`,
+    actions: [
+      {
+        title: `Click 'Đăng nhập'`,
+        click: `#accountmanager > a`
+      },
+      // {
+      //   title: `Wait for see 'Đăng nhập' button on popup`,
+      //   waitForSelector: `#fdDlgLogin > div.frame > div.btns.col2.bottom > a.btn.btn-login`,
+      // },
+      {
+        title: `Click 'Đăng nhập' on popup`,
+        click: `#fdDlgLogin > div.frame > div.btns.col2.bottom > a.btn.btn-login`
+      },
+      {
+        title: `Wait for login page loaded`,
+        waitForFunction: `window.location.href.includes("https://id.foody.vn")`
+      },
+      {
+        title: `Type in email`,
+        actions: [
+          {
+            title: `Focus on email input`,
+            focus: `#Email`
+          },
+          {
+            title: `Type email: hoanganh_25991@yahoo.com.vn`,
+            type: `hoanganh_25991@yahoo.com.vn`
+          }
+        ]
+      },
+      {
+        title: `Type in password`,
+        actions: [
+          {
+            title: `Focus on password input`,
+            focus: `#Password`
+          },
+          {
+            title: `Type password: wckmaemi`,
+            type: `wckmaemi`
+          }
+        ]
+      },
+      {
+        title: `Click Đăng nhập, to submit`,
+        click: `#bt_submit`
+      }
+    ]
+  }
+]
+
+const finishAwaitList = arr => async callback => {
+  await arr.reduce(async (carry, awaitItem) => {
+    await carry
+    return callback(awaitItem)
+  }, console.log("Finish awaitList"))
+}
+
+const doAction = page => async action => {
+  const { title } = action
+  logWithInfo(title)
+  const { actions } = action
+
+  const hasChildActions = Boolean(actions)
+  if (hasChildActions) {
+    await finishAwaitList(actions)(doAction(page))
+    return
+  }
+
+  const actionName = Object.keys(action).filter(actionName => actionName !== "title")[0]
+  const param = action[actionName]
+  await page[actionName](param)
+  const imgName = title.replace(/[^a-zA-Z\s]/g, "")
+  await page.screenshot({ path: `${imgName}.png` })
+}
+
+const readDescription = page => async description => {
+  await finishAwaitList(description)(doAction(page))
+}
+
 const findStore = async () => {
   const browser = await puppeteer.launch(config.launch)
   const page = await browser.newPage()
   await page.goto(homepage)
-  await page.setViewport({ width: 1200, height: 600 })
+  await page.setViewport(viewport)
   await page.setRequestInterceptionEnabled(true)
   const networkRequest = []
   page.on("request", interceptedRequest => {
@@ -43,96 +135,8 @@ const findStore = async () => {
     else interceptedRequest.continue()
   })
 
-  await dismisPopup(page)("#popup-choose-category > ul > li:nth-child(1) > a")
-  await screenshot(page)({ path: `${screenshotDir}/before.jpeg`, quality: 20 })
+  await readDescription(page)(loginDescription)
 
-  // Have to login, foddy damn crazy
-  // A lot of bug happens, when user NOT LOGGINED IN
-  const loginButton = await page.$(c.loginButton)
-  await loginButton.click()
-  await page.waitForSelector(c.clickLogin)
-
-  const clickLogin = await page.$(c.clickLogin)
-  await clickLogin.click()
-  const redirectToLoginUrl = `window.location.href.includes("id.foody.vn")`
-  await page.waitForFunction(redirectToLoginUrl)
-
-  await screenshot(page)({ path: `${screenshotDir}/login-page.jpeg`, quality: 20 })
-
-  await page.focus(c.emailInput)
-  page.type("hoanganh_25991@yahoo.com.vn")
-
-  await page.focus(c.passInput)
-  page.type("wckmaemi")
-
-  const submitBtn = await page.$(c.submitButton)
-  await submitBtn.click()
-  const redirectToHomePageUrl = `window.location.href=="https://www.foody.vn/#/places"`
-  await page.waitForFunction(redirectToHomePageUrl)
-
-  await screenshot(page)({ path: `${screenshotDir}/logged-in.jpeg`, quality: 20 })
-
-  const startQueue = Promise.resolve(logWithInfo("Starting await queue..."))
-  await steps.reduce(async (carry, { selector, waitFor }, index) => {
-    await carry
-    return clickAndWait(page)({ selector, waitFor }, index)
-  }, startQueue)
-
-  await page.waitForSelector(resultSelector)
-
-  const seeResult = await page.evaluate(async () => {
-    const contentItemSelector = "#result-box > div.row-view > div > div > div"
-    const defer = async waitTime => await new Promise(resolve => setTimeout(resolve, waitTime * 1000))
-    const forcePageLoadMoreContent = async (waitForFunction = () => true, options = { timeout: 30 }) => {
-      const body = document.body
-      const documentCurrHeight = body.clientHeight
-      window.scrollBy(0, documentCurrHeight)
-      await defer(1)
-      let count = 0
-      const { timeout } = options
-      while (!waitForFunction() && count < timeout) {
-        await defer(1)
-        count++
-      }
-    }
-
-    // Wait for items load
-    await forcePageLoadMoreContent()
-
-    const loadMoreButton = document.querySelector("#scrollLoadingPage")
-
-    let currNumItems = document.querySelectorAll(contentItemSelector).length
-
-    let allItemsLoaded = false
-    while (!allItemsLoaded) {
-      loadMoreButton.click()
-      await forcePageLoadMoreContent(() => {
-        const next = document.querySelectorAll(contentItemSelector).length
-        return next > currNumItems
-      })
-      const loadButtonIsHidden = loadMoreButton.offsetParent === null
-      if (loadButtonIsHidden) allItemsLoaded = true
-    }
-
-    const nodeList = document.querySelectorAll(contentItemSelector)
-    const items = []
-    for (let i = 0; i < nodeList.length; i++) {
-      items.push(nodeList[i])
-    }
-
-    const readItemInfo = item => {
-      const imgUrl = item.querySelector("img").src
-      const storeName = item.querySelector("h2").innerText
-      const address = item.querySelector("div.result-address").innerText
-      return { imgUrl, storeName, address }
-    }
-
-    const itemsInfo = items.map(item => readItemInfo(item))
-
-    return { numItems: nodeList.length, itemsInfo }
-  })
-
-  logWithInfo(seeResult)
   logWithInfo(`networkRequest.length: ${networkRequest.length}`)
   await screenshot(page)({ path: `${screenshotDir}/after.jpeg`, quality: 20 })
   await browser.close()
