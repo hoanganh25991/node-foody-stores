@@ -1,6 +1,5 @@
 const defer = require("./defer")
-const log = require("./logWithInfo")
-const timeout = require("./timeout")
+const logWithInfo = require("./logWithInfo")
 const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
 const logExactErrMsg = require("./logExactErrMsg")
@@ -71,7 +70,7 @@ const findStore = async () => {
 
   await screenshot(page)({ path: `${screenshotDir}/logged-in.jpeg`, quality: 20 })
 
-  const startQueue = Promise.resolve(log("Starting await queue..."))
+  const startQueue = Promise.resolve(logWithInfo("Starting await queue..."))
   await steps.reduce(async (carry, { selector, waitFor }, index) => {
     await carry
     return clickAndWait(page)({ selector, waitFor }, index)
@@ -120,7 +119,7 @@ const findStore = async () => {
     }
 
     const readItemInfo = item => {
-      const imgUrl = item.querySelector("img")
+      const imgUrl = item.querySelector("img").src
       const storeName = item.querySelector("h2").innerText
       const address = item.querySelector("div.result-address").innerText
       return { imgUrl, storeName, address }
@@ -131,10 +130,9 @@ const findStore = async () => {
     return { numItems: nodeList.length, itemsInfo }
   })
 
-  console.log(seeResult)
+  logWithInfo(seeResult)
   await screenshot(page)({ path: `${screenshotDir}/after.jpeg`, quality: 20 })
   await browser.close()
-  timeout.log()
   return "hello"
 }
 
