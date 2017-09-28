@@ -36,7 +36,9 @@ const findStore = async () => {
   await page.goto(homepage)
   await page.setViewport({ width: 1200, height: 600 })
   await page.setRequestInterceptionEnabled(true)
+  const networkRequest = []
   page.on("request", interceptedRequest => {
+    networkRequest.push(interceptedRequest.url)
     if (interceptedRequest.url.endsWith(".png") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
     else interceptedRequest.continue()
   })
@@ -131,6 +133,7 @@ const findStore = async () => {
   })
 
   logWithInfo(seeResult)
+  logWithInfo(`networkRequest.length: ${networkRequest.length}`)
   await screenshot(page)({ path: `${screenshotDir}/after.jpeg`, quality: 20 })
   await browser.close()
   return "hello"
