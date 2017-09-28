@@ -1,6 +1,7 @@
-/.idea
-/node_modules
-/vendor
-/tmp
-/*.png
-/*.jpeg
+.idea
+node_modules
+vendor
+tmp
+*.png
+*.jpeg
+*.jpg

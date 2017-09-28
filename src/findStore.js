@@ -49,7 +49,7 @@ const loginDescription = [
       },
       {
         title: `Wait for login page loaded`,
-        waitForFunction: `window.location.href.includes("https://id.foody.vn")`
+        waitForFunction: `window.location.href.startsWith("https://id.foody.vn")`
       },
       {
         title: `Type in email`,
@@ -83,7 +83,7 @@ const loginDescription = [
       },
       {
         title: `Wait for go back to homepage`,
-        waitForFunction: `window.location.href==="https://www.foody.vn/#/places"`
+        waitForFunction: [`window.location.href.startsWith("https://www.foody.vn")`, { timeout: 40 * 1000 }]
       }
     ]
   }
@@ -110,9 +110,10 @@ const doAction = (page, subLevel = 0) => async action => {
 
   const actionName = Object.keys(action).filter(actionName => actionName !== "title")[0]
   const param = action[actionName]
-  await page[actionName](param)
-  const imgName = title.replace(/[^a-zA-Z\s]/g, "")
-  await page.screenshot({ path: `${imgName}.png` })
+  const args = typeof param === "string" ? [param] : param
+  await page[actionName](...args)
+  const imgName = title.replace(/[^a-zA-Z]/g, "")
+  await page.screenshot({ path: `${screenshotDir}/${imgName}.jpg` })
 }
 
 const readDescription = page => async description => {
@@ -128,14 +129,14 @@ const findStore = async () => {
   const networkRequest = []
   page.on("request", interceptedRequest => {
     networkRequest.push(interceptedRequest.url)
-    if (interceptedRequest.url.endsWith(".png") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
+    if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
     else interceptedRequest.continue()
   })
 
   await readDescription(page)(loginDescription)
 
   logWithInfo(`networkRequest.length: ${networkRequest.length}`)
-  await screenshot(page)({ path: `${screenshotDir}/after.jpeg`, quality: 20 })
+  await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
   await browser.close()
   return "hello"
 }
