@@ -1,14 +1,27 @@
 const config = {
   spaceIndent: 2
 }
-const logWithInfo = (log, subLevel = 0) => {
-  if (typeof log !== "string") {
-    console.log("[INFO]", log)
+const logWithInfo = (logs, subLevel = 0) => {
+  const padding = Array(subLevel * config.spaceIndent + 1).join(" ")
+  const paddingWithRootSlash = subLevel > 0 ? `${padding}\\__` : padding
+
+  const isArr = Array.isArray(logs)
+  const isStr = typeof logs !== "string"
+  switch (true) {
+    case isArr: {
+      console.log(`[INFO] ${paddingWithRootSlash}`, ...logs)
+      break
+    }
+    case isStr: {
+      console.log(`[INFO] ${paddingWithRootSlash}${logs}`)
+      break
+    }
+    default: {
+      console.log(`[INFO] ${paddingWithRootSlash}`, logs)
+      break
+    }
   }
 
-  const padding = Array(subLevel * config.spaceIndent + 1).join("_")
-  const paddingWithRootSlash = subLevel > 0 ? `\\${padding}` : padding
-  console.log(`[INFO] ${paddingWithRootSlash}${log}`)
   return
 }
 

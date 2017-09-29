@@ -87,55 +87,99 @@ const loginDescription = [
       },
       {
         title: `Current location`,
-        evaluate: [
-          function() {
-            return { currentLocation: window.location.href }
-          }
-        ]
+        evaluate: () => window.location.href,
+        storeReturnAsKey: "currentLocation"
       }
     ]
   }
 ]
 
-const queueAwaitList = lastResult => arr => async callback => {
-  return await arr.reduce(async (carry, awaitAction) => {
-    const lastResult = await carry
-    return callback(lastResult)(awaitAction)
-  }, lastResult)
+const NetworkManager = page => {
+  const requestUrlList = []
+  const requestList = []
+  page.on("request", interceptedRequest => {
+    requestList.push(interceptedRequest)
+    requestUrlList.push(interceptedRequest.url)
+    if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
+    else interceptedRequest.continue()
+  })
+  return {
+    log() {
+      logWithInfo(`[NetworkManager] Summary: ${requestUrlList.length} requets`)
+    },
+    get() {
+      return requestUrlList
+    }
+  }
 }
 
-const doAction = (page, subLevel = 0) => lastResult => async action => {
-  const { title } = action
+const sampleAwaitAction = {
+  title: "Sameple await action",
+  actions: [],
+  // click: ["arg1", "arg2"],
+  storeReturnAsKey: "sampleAwaitAction",
+  screenshot: true
+}
+
+const getReservedKeyInAwaitAction = () => Object.keys(sampleAwaitAction)
+
+const getActionName = awaitAction => {
+  const keys = Object.keys(awaitAction)
+  const reservedKeys = getReservedKeyInAwaitAction()
+  const actionName = keys.filter(key => !reservedKeys.includes(key))[0]
+  if (!actionName) throw new Error("Cant find actionName")
+  return actionName
+}
+
+const queueAwaitList = awaitList => lastReturn => async callback => {
+  return await awaitList.reduce(async (carry, awaitAction) => {
+    const lastReturn = await carry
+    return callback(lastReturn)(awaitAction)
+  }, lastReturn)
+}
+
+const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction => {
+  const { title, actions: awaitList } = awaitAction
   logWithInfo(title, subLevel)
-  const { actions } = action
-  const hasChildActions = Boolean(actions)
+
+  // Has child actions, self call to run it
+  const hasChildActions = Boolean(awaitList)
   if (hasChildActions) {
     const currSubLevel = subLevel + 1
-    const callback = doAction(page, currSubLevel)
-    return await queueAwaitList(lastResult)(actions)(callback)
+    const callback = runPageAction(page, currSubLevel)
+    return await queueAwaitList(awaitList)(lastReturn)(callback)
   }
-  const actionName = Object.keys(action).filter(actionName => actionName !== "title")[0]
-  const param = action[actionName]
-  const args = typeof param === "string" ? [param] : param
-  let result
-  try {
-    result = await page[actionName](...args)
-  } catch (err) {
-    logExactErrMsg(err)
-    result = { [Math.floor(Math.random() * 1000)]: `Fail at: ${title}` }
+
+  // Run page action
+  const actionName = getActionName(awaitAction)
+  const params = awaitAction[actionName]
+  const args = Array.isArray(params) ? params : [params]
+  const result = await page[actionName](...args)
+
+  // Should take screenshot
+  const { screenshot = true } = awaitAction
+  if (screenshot) {
+    const imgName = title.replace(/[^a-zA-Z]/g, "")
+    await page.screenshot({ path: `${screenshotDir}/${imgName}.jpg`, qualtity: 10 })
   }
-  const imgName = title.replace(/[^a-zA-Z]/g, "")
-  await page.screenshot({ path: `${screenshotDir}/${imgName}.jpg` })
-  const nextResult = Object.assign(lastResult, result)
-  return nextResult
+
+  // Should store return
+  let actionReturn = {}
+  const { storeReturnAsKey } = awaitAction
+  if (storeReturnAsKey) {
+    actionReturn = { [storeReturnAsKey]: result }
+  }
+
+  // Merge return
+  const nextReturn = Object.assign(lastReturn, actionReturn)
+  return nextReturn
 }
 
-const readDescription = page => async description => {
-  const storeResult = {}
-  const callback = doAction(page)
-  const result = await queueAwaitList(storeResult)(description)(callback)
-  console.log(result)
-  return result
+const readDescription = page => async awaitListDescription => {
+  const storeReturn = {}
+  await queueAwaitList(awaitListDescription)(storeReturn)(runPageAction(page))
+  logWithInfo(["storeReturn", storeReturn])
+  return storeReturn
 }
 
 const findStore = async () => {
@@ -144,16 +188,11 @@ const findStore = async () => {
   await page.goto(homepage)
   await page.setViewport(viewport)
   await page.setRequestInterceptionEnabled(true)
-  const networkRequest = []
-  page.on("request", interceptedRequest => {
-    networkRequest.push(interceptedRequest.url)
-    if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
-    else interceptedRequest.continue()
-  })
+  const networKMangeer = NetworkManager(page)
 
   await readDescription(page)(loginDescription)
 
-  logWithInfo(`networkRequest.length: ${networkRequest.length}`)
+  networKMangeer.log()
   await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
   await browser.close()
   return "hello"
