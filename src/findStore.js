@@ -8,14 +8,6 @@ const { screenshot, dismisPopup, clickAndWait } = require("./pageUtils")
 const homepage = "https://www.foody.vn/#/places"
 const viewport = { width: 1200, height: 600 }
 
-const steps = [
-  { selector: "#searchFormTop > div > a", waitFor: "#fdDlgSearchFilter > div.sf-right" },
-  { selector: "#search-filter-dis-4" },
-  { selector: "#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)", waitFor: "#search-filter-cate-11" },
-  { selector: "#search-filter-cate-11" },
-  { selector: "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue" }
-]
-
 const resultSelector =
   "#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side > div.head-result.d_resultfilter"
 
@@ -91,7 +83,48 @@ const loginDescription = [
         storeReturnAsKey: "currentLocation"
       }
     ]
+  },
+  {
+    title: `Open filter 'Bộ lọc'`,
+    click: `#searchFormTop > div > a`
+  },
+  {
+    title: `Wait for filter 'Bộ lọc' load locations 'Khu vực'`,
+    waitForSelector: ["#fdDlgSearchFilter > div.sf-right", { timeout: 60 * 1000 }]
+  },
+  {
+    title: `Store available location`,
+    evaluate: () => {
+      const inputNodeList = document.querySelectorAll(
+        "#fdDlgSearchFilter > div.sf-right > div:nth-child(2) > ul > li > input"
+      )
+      const inputList = []
+      for (let i = 0; i < inputNodeList.length; i++) {
+        inputList.push(inputNodeList[i])
+      }
+      const availableLocations = inputList.map(inputElement => {
+        const selector = inputElement.id
+        const labelElement = inputElement.nextElementSibling
+        const displayName = labelElement.innerText
+        return { selector, displayName }
+      })
+      // const summary = {
+      //   count: inputNodeList.length,
+      //   availableLocations
+      // }
+      // return
+      return availableLocations
+    },
+    storeReturnAsKey: "availableLocations"
   }
+]
+
+const steps = [
+  { selector: "#searchFormTop > div > a", waitFor: "#fdDlgSearchFilter > div.sf-right" },
+  { selector: "#search-filter-dis-4" },
+  { selector: "#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)", waitFor: "#search-filter-cate-11" },
+  { selector: "#search-filter-cate-11" },
+  { selector: "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue" }
 ]
 
 const NetworkManager = page => {
@@ -154,7 +187,13 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   const actionName = getActionName(awaitAction)
   const params = awaitAction[actionName]
   const args = Array.isArray(params) ? params : [params]
-  const result = await page[actionName](...args)
+  // const result = await page[actionName](...args)
+  let result
+  try {
+    result = await page[actionName](...args)
+  } catch (err) {
+    logExactErrMsg(err)
+  }
 
   // Should take screenshot
   const { screenshot = true } = awaitAction
