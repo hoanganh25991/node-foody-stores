@@ -45,6 +45,22 @@ const needKeys = [
   "DetailUrl"
 ]
 
+const todayDDMMYYY = () => {
+  var today = new Date()
+  var dd = today.getDate()
+  var mm = today.getMonth() + 1 //January is 0!
+
+  let yyyy = today.getFullYear()
+  if (dd < 10) {
+    dd = "0" + dd
+  }
+  if (mm < 10) {
+    mm = "0" + mm
+  }
+  let todayStr = dd + "/" + mm + "/" + yyyy
+  return todayStr
+}
+
 const readOne = lastStores => async url => {
   let count = 1
   let stillHasStores = true
@@ -58,13 +74,28 @@ const readOne = lastStores => async url => {
     logWithInfo(`Search url: ${searchUrl}`, 1)
     logWithInfo(`Search find: ${searchStores.length} stores`, 1)
     if (!searchStores.length) stillHasStores = false
-    const itemsWithNeedInfo = searchStores.map(originItem => {
-      return needKeys.reduce((carry, key) => {
-        carry[key] = originItem[key]
+
+    const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
+      const lastStoreList = await carry
+      const store = needKeys.reduce((carry, key) => {
+        carry[key] = originStore[key]
         return carry
       }, {})
-    })
-    stores = [...stores, ...itemsWithNeedInfo]
+      const { Id: id } = store
+      const reviewUrl = `https://www.foody.vn/__get/Review/ResLoadMore?ResId=${id}&isLatest=false&Count=1`
+      const res = await callFoodyApi(reviewUrl)
+      const { Items: reviews } = res
+      let createdDate = todayDDMMYYY()
+      const firstReviews = reviews[0]
+      if (firstReviews) {
+        const { CreatedOnTimeDiff } = firstReviews
+        createdDate = CreatedOnTimeDiff
+      }
+      store["CreatedDate"] = createdDate
+      return [...lastStoreList, store]
+    }, [])
+
+    stores = [...stores, ...storesWithNeedInfo]
   } while (stillHasStores)
   // console.log(stores, stores.length)
   const next = [...lastStores, ...stores]
@@ -93,6 +124,7 @@ const run = async () => {
   }, [])
 
   console.log(stores.length)
+  console.log(stores[0])
 }
 
 run()
