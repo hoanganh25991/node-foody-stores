@@ -64,7 +64,7 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   const { title, actions: awaitList } = awaitAction
   logWithInfo(title, subLevel)
 
-  // Has child actions, self call to run it
+  // Has child actions, self call to callApiUrl it
   const hasChildActions = Boolean(awaitList)
   if (hasChildActions) {
     const currSubLevel = subLevel + 1
@@ -380,12 +380,12 @@ const findLocationCategory = async () => {
 
 const findApiUrl = async ({ availableLocations, availableCategories }) => {
   const run = lastList => async locationWithCategorys => {
+    console.log("\x1b[41m%s\x1b[0m: ", "Open new browser") //yellow
     const browser = await puppeteer.launch(config.launch)
     const page = await browser.newPage()
-    await page.goto(homepage)
     await page.setViewport(viewport)
     await page.setRequestInterceptionEnabled(true)
-    const networKMangeer = NetworkManager(page)
+    const networKManger = NetworkManager(page)
 
     const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
       const lastCarry = await carry
@@ -393,10 +393,10 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
       const url = await readDescription(page)(description)
       return [...lastCarry, url]
     }, [])
-    networKMangeer.log()
+    networKManger.log()
     await browser.close()
     const nextList = [...lastList, ...urlLIst]
-    storeData("api-list")(nextList)
+    storeData("api-list.json")(nextList)
     return nextList
   }
 
@@ -418,7 +418,7 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
       const lastChunk = carry[carry.length - 1]
 
       // If lastChunk is full, create new one to push item
-      if (lastChunk.length == 10) {
+      if (lastChunk.length == 5) {
         const newChunk = [item]
         carry.push(newChunk)
         return carry
@@ -430,10 +430,13 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
     [[]]
   )
 
+  let count = 0
   const urlList = await xxx.reduce(async (carry, item) => {
+    console.log("\x1b[41m%s\x1b[0m: ", `At chunk: ${count}`)
+    count++
     const lastList = await carry
     return run(lastList)(item)
-  }, Promise.resolve("Start"))
+  }, Promise.resolve([]))
 
   return urlList
 }
@@ -447,7 +450,7 @@ const findStore = async () => {
   const { availableLocations, availableCategories } = await findLocationCategory()
   storeData("location-category.json")({ availableLocations, availableCategories })
   const apiUrlList = await findApiUrl({ availableLocations, availableCategories })
-  storeData("api-list.json")(apiUrlList)
+  // storeData("api-list.json")(apiUrlList)
   return apiUrlList
 }
 

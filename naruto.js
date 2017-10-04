@@ -31,7 +31,7 @@ const crawling = async () => {
   } catch (err) {
     logExactErrMsg(err)
   } finally {
-    // Auto re run
+    // Auto re callApiUrl
     // setTimeout(crawling, 6000)
     logWithInfo("==============COMPLETE CRAWLING FOODY==============")
     process.exit()
