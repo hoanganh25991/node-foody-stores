@@ -15,7 +15,7 @@ const callFoodyApi = async apiUrl => {
     }
   })
   const stores = await res.json()
-  console.log(stores)
+  // console.log(stores)
   return stores
 }
 
