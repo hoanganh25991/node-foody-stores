@@ -109,18 +109,24 @@ const readDescription = page => async awaitListDescription => {
   await queueAwaitList(awaitListDescription)(storeReturn)(runPageAction(page))
   logWithInfo(["storeReturn", storeReturn])
   // const fs = require("fs")
-  // fs.writeFileSync("abc.log", JSON.stringify(storeReturn))
+  // const time = new Date().getTime()
+  // fs.writeFileSync(`${time}.json`, JSON.stringify(storeReturn))
   return storeReturn
 }
 
 const loginDescription = [
   {
     title: `Dismiss popup`,
-    click: `#popup-choose-category > ul > li:nth-child(1) > a`
-  },
-  {
-    title: `Wait for popup disappear`,
-    waitForFunction: `document.querySelector("#popup-choose-category > ul > li:nth-child(1) > a").offsetParent === null`
+    actions: [
+      {
+        title: `Click to 'Khám phá' to hide popup`,
+        click: `#popup-choose-category > ul > li:nth-child(1) > a`
+      },
+      {
+        title: `Wait for popup disappear`,
+        waitForFunction: `document.querySelector("#popup-choose-category > ul > li:nth-child(1) > a").offsetParent === null`
+      }
+    ]
   },
   {
     title: `Login`,
@@ -217,12 +223,12 @@ const loginDescription = [
           }
           const availableLocations = await inputList.reduce(async (carry, inputElement) => {
             const lastCarry = await carry
-            const selector = inputElement.id
+            const selector = `#${inputElement.id}`
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
             //noinspection JSUnresolvedFunction
-            const locationId = await window.getIdFromSelector(selector)
-            return [...lastCarry, { selector, displayName, locationId }]
+            const id = await window.getIdFromSelector(selector)
+            return [...lastCarry, { selector, displayName, id }]
           }, [])
           return availableLocations
         },
@@ -253,12 +259,12 @@ const loginDescription = [
           }
           const availableCategories = await inputList.reduce(async (carry, inputElement) => {
             const lastCarry = await carry
-            const selector = inputElement.id
+            const selector = `#${inputElement.id}`
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
             //noinspection JSUnresolvedFunction
-            const categoryId = await window.getIdFromSelector(selector)
-            return [...lastCarry, { selector, displayName, categoryId }]
+            const id = await window.getIdFromSelector(selector)
+            return [...lastCarry, { selector, displayName, id }]
           }, [])
           return availableCategories
         },
@@ -268,13 +274,89 @@ const loginDescription = [
   }
 ]
 
-const steps = [
-  { selector: "#searchFormTop > div > a", waitFor: "#fdDlgSearchFilter > div.sf-right" },
-  { selector: "#search-filter-dis-4" },
-  { selector: "#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)", waitFor: "#search-filter-cate-11" },
-  { selector: "#search-filter-cate-11" },
-  { selector: "#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue" }
-]
+const generateGetUrlApiDescription = location => category => {
+  const { selector: locationSelector, displayName: locationName } = location
+  const { selector: categorySelector, displayName: categoryName } = category
+  console.log(locationSelector)
+  return [
+    {
+      title: `Dismiss popup`,
+      actions: [
+        {
+          title: `Click to 'Khám phá' to hide popup`,
+          click: `#popup-choose-category > ul > li:nth-child(1) > a`
+        },
+        {
+          title: `Wait for popup disappear`,
+          waitForFunction: `document.querySelector("#popup-choose-category > ul > li:nth-child(1) > a").offsetParent === null`
+        }
+      ]
+    },
+    {
+      title: `Run filter 'Bộ lọc' to get url API`,
+      actions: [
+        {
+          title: `Choose ${locationName}`,
+          actions: [
+            {
+              title: `Open filter 'Bộ lọc'`,
+              click: `#searchFormTop > div > a`
+            },
+            {
+              title: `XXXXX`,
+              waitForFunction: `document.querySelector("#fdDlgSearchFilter").getAttribute("class")=="fd-search-filter ng-scope"`
+            },
+            {
+              title: `Click ${locationName}`,
+              click: `${locationSelector}`
+            }
+          ]
+        },
+        {
+          title: `Choose ${categoryName}`,
+          actions: [
+            {
+              title: `Open filter 'Bộ lọc' for categories 'Phân loại'`,
+              click: `#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)`
+            },
+            {
+              title: `Wait for filter 'Bộ lọc' load categories 'Phân loại'`,
+              waitForFunction: `setTimeout(()=>{document.querySelector("#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)").getAttribute("class")==="active"}, 500)`
+            },
+            {
+              title: `Click ${categoryName}`,
+              click: `${categorySelector}`
+            }
+          ]
+        },
+        {
+          title: `Submit to find out API url`,
+          click: `#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue`
+        },
+        {
+          title: `Wait for navigation`,
+          // waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`,
+          waitFor: 10 * 1000
+        },
+        {
+          title: `Store api url`,
+          evaluate: () => {
+            const url = window.location.href
+            return { url }
+          },
+          storeReturnAsKey: `lc${location.id}${category.id}`
+        }
+      ]
+    }
+  ]
+}
+
+const joinTwoList = list1 => list2 => {
+  return list1.reduce((carry, item) => {
+    const itemWithList2Item = list2.map(list2Item => [item, list2Item])
+    return [...carry, ...itemWithList2Item]
+  }, [])
+}
 
 const findStore = async () => {
   const browser = await puppeteer.launch(config.launch)
@@ -284,7 +366,34 @@ const findStore = async () => {
   await page.setRequestInterceptionEnabled(true)
   const networKMangeer = NetworkManager(page)
 
-  await readDescription(page)(loginDescription)
+  // const {availableLocations, availableCategories} = await readDescription(page)(loginDescription)
+  // const shouldCrawlCategoriesName = ["Ăn chay", "Quán ăn", "Quán nhậu", "Tiệm bánh", "Ăn vặt/vỉa hè", "Giao cơm văn phòng"]
+  // const shouldCrawlCategories = availableCategories.filter(category => shouldCrawlCategoriesName.includes(category.displayName))
+  //
+  // const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
+
+  // const bundlePromises = locationWithCategorys.map(async ([location, category]) => {
+  //   const description = generateGetUrlApiDescription(location)(category)
+  //   console.log(description)
+  //   const url = await readDescription(page)(description)
+  //   return url;
+  // })
+  //
+  // const urlList = await bundlePromises
+  // console.log(urlList)
+
+  const d = generateGetUrlApiDescription({
+    selector: "#search-filter-dis-1",
+    displayName: "Quận 1",
+    id: 1
+  })({
+    selector: "#search-filter-cate-12",
+    displayName: "Sang trọng",
+    id: 12
+  })
+
+  const url = await readDescription(page)(d)
+  console.log(url)
 
   networKMangeer.log()
   await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
