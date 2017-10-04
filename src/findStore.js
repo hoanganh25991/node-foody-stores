@@ -4,7 +4,7 @@ const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
 const logExactErrMsg = require("./logExactErrMsg")
 const { screenshot } = require("./pageUtils")
-const homepage = "https://www.foody.vn/#/places"
+const homepage = "https://www.foody.vn/ho-chi-minh#/places"
 const viewport = { width: 1200, height: 600 }
 const screenshotDir = "screenshot"
 const jsonLogDir = "tmp"
@@ -283,7 +283,7 @@ const generateGetUrlApiDescription = location => category => {
   return [
     {
       title: `Go to homepage`,
-      goto: `https://www.foody.vn/#/places`
+      goto: [`https://www.foody.vn/ho-chi-minh#/places`, { waitUntil: "networkidle" }]
     },
     {
       title: `Dismiss popup`,
@@ -341,8 +341,8 @@ const generateGetUrlApiDescription = location => category => {
         },
         {
           title: `Wait for navigation`,
-          waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`,
-          screenshot: { imgName: `filter-page-for-lc${locationId}${categoryId}` }
+          waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`
+          // screenshot: { imgName: `filter-page-for-lc${locationId}${categoryId}` }
         },
         {
           title: `Store api url`,
@@ -379,22 +379,21 @@ const findLocationCategory = async () => {
 }
 
 const findApiUrl = async ({ availableLocations, availableCategories }) => {
-  const run = lastList => async locationWithCategorys => {
-    console.log("\x1b[41m%s\x1b[0m: ", "Open new browser") //yellow
-    const browser = await puppeteer.launch(config.launch)
-    const page = await browser.newPage()
-    await page.setViewport(viewport)
-    await page.setRequestInterceptionEnabled(true)
-    const networKManger = NetworkManager(page)
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await page.setViewport(viewport)
+  console.log("\x1b[41m%s\x1b[0m: ", "Open new page") //yellow
+  await page.setRequestInterceptionEnabled(true)
+  const networKManger = NetworkManager(page)
 
+  const run = lastList => async locationWithCategorys => {
     const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
       const lastCarry = await carry
       const description = generateGetUrlApiDescription(location)(category)
       const url = await readDescription(page)(description)
       return [...lastCarry, url]
     }, [])
-    networKManger.log()
-    await browser.close()
+    // await page.close()
     const nextList = [...lastList, ...urlLIst]
     storeData("api-list.json")(nextList)
     return nextList
@@ -413,30 +412,36 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
   )
   const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
 
-  const xxx = locationWithCategorys.reduce(
-    (carry, item) => {
-      const lastChunk = carry[carry.length - 1]
+  const chunkLength = 1
 
-      // If lastChunk is full, create new one to push item
-      if (lastChunk.length == 5) {
-        const newChunk = [item]
-        carry.push(newChunk)
-        return carry
-      }
-
-      lastChunk.push(item)
-      return carry
-    },
-    [[]]
-  )
+  // const xxx = locationWithCategorys.reduce(
+  //   (carry, item) => {
+  //     const lastChunk = carry[carry.length - 1]
+  //
+  //     // If lastChunk is full, create new one to push item
+  //     if (lastChunk.length == chunkLength) {
+  //       const newChunk = [item]
+  //       carry.push(newChunk)
+  //       return carry
+  //     }
+  //
+  //     lastChunk.push(item)
+  //     return carry
+  //   },
+  //   [[]]
+  // )
 
   let count = 0
-  const urlList = await xxx.reduce(async (carry, item) => {
+  const urlList = await locationWithCategorys.reduce(async (carry, item) => {
+    const lastList = await carry
     console.log("\x1b[41m%s\x1b[0m: ", `At chunk: ${count}`)
     count++
-    const lastList = await carry
     return run(lastList)(item)
   }, Promise.resolve([]))
+
+  networKManger.log()
+  await page.close()
+  await browser.close()
 
   return urlList
 }
