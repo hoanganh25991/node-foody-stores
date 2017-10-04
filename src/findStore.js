@@ -127,7 +127,7 @@ const loginDescription = [
         title: `Evaluate`,
         evaluate: () => {
           const inputNodeList = document.querySelectorAll(
-            "#fdDlgSearchFilter > div.sf-right > div:nth-child(2) > ul > li > input"
+            "#fdDlgSearchFilter > div.sf-right > div:nth-child(1) > ul > li > input"
           )
           const inputList = []
           for (let i = 0; i < inputNodeList.length; i++) {
