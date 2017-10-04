@@ -4,11 +4,10 @@ const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
 const logExactErrMsg = require("./logExactErrMsg")
 const { screenshot } = require("./pageUtils")
-
 const homepage = "https://www.foody.vn/#/places"
 const viewport = { width: 1200, height: 600 }
-
 const screenshotDir = "screenshot"
+const jsonLogDir = "tmp"
 
 const NetworkManager = page => {
   const requestUrlList = []
@@ -19,7 +18,7 @@ const NetworkManager = page => {
     if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
     else interceptedRequest.continue()
   })
-  page.on("console", msg => console.log(msg))
+  // page.on("console", msg => console.log(msg))
   return {
     log() {
       logWithInfo(`[NetworkManager] Summary: ${requestUrlList.length} requets`)
@@ -81,14 +80,17 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   let result
   try {
     result = await page[actionName](...args)
+    // Always defer 0.5s to wait for execution
+    await defer(0.5)
   } catch (err) {
     logExactErrMsg(err)
   }
 
   // Should take screenshot
-  const { screenshot = true } = awaitAction
+  const { screenshot } = awaitAction
   if (screenshot) {
-    const imgName = title.replace(/[^a-zA-Z]/g, "")
+    let imgName = title.replace(/[^a-zA-Z]/g, "")
+    if (typeof screenshot === "object" && screenshot.imgName) imgName = screenshot.imgName
     await page.screenshot({ path: `${screenshotDir}/${imgName}.jpg`, qualtity: 10 })
   }
 
@@ -275,9 +277,9 @@ const loginDescription = [
 ]
 
 const generateGetUrlApiDescription = location => category => {
-  const { selector: locationSelector, displayName: locationName } = location
-  const { selector: categorySelector, displayName: categoryName } = category
-  console.log(locationSelector)
+  const { selector: locationSelector, displayName: locationName, id: locationId } = location
+  const { selector: categorySelector, displayName: categoryName, id: categoryId } = category
+  console.log("\x1b[36m%s\x1b[0m", `Filter Description for ${locationName} > ${categoryName}`)
   return [
     {
       title: `Go to homepage`,
@@ -339,8 +341,8 @@ const generateGetUrlApiDescription = location => category => {
         },
         {
           title: `Wait for navigation`,
-          waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`
-          // waitFor: 10 * 1000
+          waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`,
+          screenshot: { imgName: `filter-page-for-lc${locationId}${categoryId}` }
         },
         {
           title: `Store api url`,
@@ -377,12 +379,26 @@ const findLocationCategory = async () => {
 }
 
 const findApiUrl = async ({ availableLocations, availableCategories }) => {
-  const browser = await puppeteer.launch(config.launch)
-  const page = await browser.newPage()
-  await page.goto(homepage)
-  await page.setViewport(viewport)
-  await page.setRequestInterceptionEnabled(true)
-  const networKMangeer = NetworkManager(page)
+  const run = lastList => async locationWithCategorys => {
+    const browser = await puppeteer.launch(config.launch)
+    const page = await browser.newPage()
+    await page.goto(homepage)
+    await page.setViewport(viewport)
+    await page.setRequestInterceptionEnabled(true)
+    const networKMangeer = NetworkManager(page)
+
+    const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
+      const lastCarry = await carry
+      const description = generateGetUrlApiDescription(location)(category)
+      const url = await readDescription(page)(description)
+      return [...lastCarry, url]
+    }, [])
+    networKMangeer.log()
+    await browser.close()
+    const nextList = [...lastList, ...urlLIst]
+    storeData("api-list")(nextList)
+    return nextList
+  }
 
   const shouldCrawlCategoriesName = [
     "Ăn chay",
@@ -396,20 +412,35 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
     shouldCrawlCategoriesName.includes(category.displayName)
   )
   const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
-  const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
-    const lastCarry = await carry
-    const description = generateGetUrlApiDescription(location)(category)
-    const url = await readDescription(page)(description)
-    return [...lastCarry, url]
-  }, [])
-  networKMangeer.log()
-  await browser.close()
-  return urlLIst
+
+  const xxx = locationWithCategorys.reduce(
+    (carry, item) => {
+      const lastChunk = carry[carry.length - 1]
+
+      // If lastChunk is full, create new one to push item
+      if (lastChunk.length == 10) {
+        const newChunk = [item]
+        carry.push(newChunk)
+        return carry
+      }
+
+      lastChunk.push(item)
+      return carry
+    },
+    [[]]
+  )
+
+  const urlList = await xxx.reduce(async (carry, item) => {
+    const lastList = await carry
+    return run(lastList)(item)
+  }, Promise.resolve("Start"))
+
+  return urlList
 }
 
 const storeData = fileName => data => {
   const fs = require("fs")
-  fs.writeFileSync(fileName, JSON.stringify(data))
+  fs.writeFileSync(`${jsonLogDir}/${fileName}`, JSON.stringify(data))
 }
 
 const findStore = async () => {
