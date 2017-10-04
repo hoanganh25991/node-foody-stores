@@ -80,6 +80,18 @@ const loginDescription = [
     ]
   },
   {
+    title: `Inject getIdFromSelector for page`,
+    exposeFunction: [
+      "getIdFromSelector",
+      selector => {
+        const idStrs = selector.match(/\d+/gi)
+        if (!idStrs) throw new Error(`Cant find id from selector: ${selector}`)
+        //Get the first one only
+        return Number(idStrs[0])
+      }
+    ]
+  },
+  {
     title: `Store available location`,
     actions: [
       {
@@ -104,7 +116,9 @@ const loginDescription = [
             const selector = inputElement.id
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
-            return { selector, displayName }
+            //noinspection JSUnresolvedFunction
+            const locationId = 1
+            return { selector, displayName, locationId }
           })
           return availableLocations
         },
@@ -133,11 +147,15 @@ const loginDescription = [
           for (let i = 0; i < inputNodeList.length; i++) {
             inputList.push(inputNodeList[i])
           }
+          const a = window.getIdFromSelector("adfasdf-2")
+          console.log(a)
           const availableLocations = inputList.map(inputElement => {
             const selector = inputElement.id
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
-            return { selector, displayName }
+            //noinspection JSUnresolvedFunction
+            const categoryId = 1
+            return { selector, displayName, categoryId }
           })
           return availableLocations
         },
@@ -164,6 +182,7 @@ const NetworkManager = page => {
     if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
     else interceptedRequest.continue()
   })
+  page.on("console", msg => console.log(msg))
   return {
     log() {
       logWithInfo(`[NetworkManager] Summary: ${requestUrlList.length} requets`)
@@ -252,6 +271,8 @@ const readDescription = page => async awaitListDescription => {
   const storeReturn = {}
   await queueAwaitList(awaitListDescription)(storeReturn)(runPageAction(page))
   logWithInfo(["storeReturn", storeReturn])
+  // const fs = require("fs")
+  // fs.writeFileSync("abc.log", JSON.stringify(storeReturn))
   return storeReturn
 }
 
