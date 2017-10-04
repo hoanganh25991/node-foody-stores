@@ -1,9 +1,8 @@
 const logWithInfo = require("./logWithInfo")
 
-const logExactErrorMsg = (err) => {
-  let shouldLog = err
-  if(typeof err === "object" && err.message) shouldLog  = err.message
-  logWithInfo(shouldLog)
+const logExactErrorMsg = err => {
+  if (typeof err === "object" && err.message) logWithInfo(err.message)
+  console.log("[ERR]", err)
 }
 
-var exports = module.exports = logExactErrorMsg
+var exports = (module.exports = logExactErrorMsg)

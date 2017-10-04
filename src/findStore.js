@@ -81,10 +81,11 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   try {
     result = await page[actionName](...args)
     // Always defer 0.5s to wait for execution
-    await defer(0.5)
   } catch (err) {
     logExactErrMsg(err)
   }
+
+  await defer(0.5)
 
   // Should take screenshot
   const { screenshot } = awaitAction
@@ -281,10 +282,19 @@ const generateGetUrlApiDescription = location => category => {
   const { selector: categorySelector, displayName: categoryName, id: categoryId } = category
   console.log("\x1b[36m%s\x1b[0m", `Filter Description for ${locationName} > ${categoryName}`)
   return [
-    {
-      title: `Go to homepage`,
-      goto: [`https://www.foody.vn/ho-chi-minh#/places`, { waitUntil: "networkidle" }]
-    },
+    // {
+    //   title: `Go to homepage`,
+    //   actions: [
+    //     {
+    //       title: `XXX`,
+    //       // goto: [`https://www.foody.vn/ho-chi-minh#/places`, { waitUntil: "networkidle" }],
+    //       evaluate: async () => {
+    //         window.location.href = "https://www.foody.vn/ho-chi-minh#/places"
+    //         // await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve))
+    //       },
+    //     }
+    //   ]
+    // },
     {
       title: `Dismiss popup`,
       actions: [
@@ -340,7 +350,7 @@ const generateGetUrlApiDescription = location => category => {
           click: `#fdDlgSearchFilter > div.sf-bottom > div > a.fd-btn.blue`
         },
         {
-          title: `Wait for navigation`,
+          title: `Wait to see result`,
           waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`
           // screenshot: { imgName: `filter-page-for-lc${locationId}${categoryId}` }
         },
@@ -380,21 +390,17 @@ const findLocationCategory = async () => {
 
 const findApiUrl = async ({ availableLocations, availableCategories }) => {
   const browser = await puppeteer.launch(config.launch)
-  const page = await browser.newPage()
+  let page = await browser.newPage()
   await page.setViewport(viewport)
   console.log("\x1b[41m%s\x1b[0m: ", "Open new page") //yellow
   await page.setRequestInterceptionEnabled(true)
   const networKManger = NetworkManager(page)
 
-  const run = lastList => async locationWithCategorys => {
-    const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
-      const lastCarry = await carry
-      const description = generateGetUrlApiDescription(location)(category)
-      const url = await readDescription(page)(description)
-      return [...lastCarry, url]
-    }, [])
-    // await page.close()
-    const nextList = [...lastList, ...urlLIst]
+  const run = lastList => async ([location, category]) => {
+    await page.goto(homepage)
+    const description = generateGetUrlApiDescription(location)(category)
+    const url = await readDescription(page)(description)
+    const nextList = [...lastList, url]
     storeData("api-list.json")(nextList)
     return nextList
   }
@@ -411,25 +417,6 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
     shouldCrawlCategoriesName.includes(category.displayName)
   )
   const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
-
-  const chunkLength = 1
-
-  // const xxx = locationWithCategorys.reduce(
-  //   (carry, item) => {
-  //     const lastChunk = carry[carry.length - 1]
-  //
-  //     // If lastChunk is full, create new one to push item
-  //     if (lastChunk.length == chunkLength) {
-  //       const newChunk = [item]
-  //       carry.push(newChunk)
-  //       return carry
-  //     }
-  //
-  //     lastChunk.push(item)
-  //     return carry
-  //   },
-  //   [[]]
-  // )
 
   let count = 0
   const urlList = await locationWithCategorys.reduce(async (carry, item) => {
