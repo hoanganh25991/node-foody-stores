@@ -280,6 +280,10 @@ const generateGetUrlApiDescription = location => category => {
   console.log(locationSelector)
   return [
     {
+      title: `Go to homepage`,
+      goto: `https://www.foody.vn/#/places`
+    },
+    {
       title: `Dismiss popup`,
       actions: [
         {
@@ -335,8 +339,8 @@ const generateGetUrlApiDescription = location => category => {
         },
         {
           title: `Wait for navigation`,
-          // waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`,
-          waitFor: 10 * 1000
+          waitFor: `#GalleryPopupApp > div.directory-container > div > div > div > div > div.result-side`
+          // waitFor: 10 * 1000
         },
         {
           title: `Store api url`,
@@ -358,7 +362,21 @@ const joinTwoList = list1 => list2 => {
   }, [])
 }
 
-const findStore = async () => {
+const findLocationCategory = async () => {
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await page.goto(homepage)
+  await page.setViewport(viewport)
+  await page.setRequestInterceptionEnabled(true)
+  const networKMangeer = NetworkManager(page)
+  const { availableLocations, availableCategories } = await readDescription(page)(loginDescription)
+  networKMangeer.log()
+  await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
+  await browser.close()
+  return { availableLocations, availableCategories }
+}
+
+const findApiUrl = async ({ availableLocations, availableCategories }) => {
   const browser = await puppeteer.launch(config.launch)
   const page = await browser.newPage()
   await page.goto(homepage)
@@ -366,39 +384,40 @@ const findStore = async () => {
   await page.setRequestInterceptionEnabled(true)
   const networKMangeer = NetworkManager(page)
 
-  // const {availableLocations, availableCategories} = await readDescription(page)(loginDescription)
-  // const shouldCrawlCategoriesName = ["Ăn chay", "Quán ăn", "Quán nhậu", "Tiệm bánh", "Ăn vặt/vỉa hè", "Giao cơm văn phòng"]
-  // const shouldCrawlCategories = availableCategories.filter(category => shouldCrawlCategoriesName.includes(category.displayName))
-  //
-  // const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
-
-  // const bundlePromises = locationWithCategorys.map(async ([location, category]) => {
-  //   const description = generateGetUrlApiDescription(location)(category)
-  //   console.log(description)
-  //   const url = await readDescription(page)(description)
-  //   return url;
-  // })
-  //
-  // const urlList = await bundlePromises
-  // console.log(urlList)
-
-  const d = generateGetUrlApiDescription({
-    selector: "#search-filter-dis-1",
-    displayName: "Quận 1",
-    id: 1
-  })({
-    selector: "#search-filter-cate-12",
-    displayName: "Sang trọng",
-    id: 12
-  })
-
-  const url = await readDescription(page)(d)
-  console.log(url)
-
+  const shouldCrawlCategoriesName = [
+    "Ăn chay",
+    "Quán ăn",
+    "Quán nhậu",
+    "Tiệm bánh",
+    "Ăn vặt/vỉa hè",
+    "Giao cơm văn phòng"
+  ]
+  const shouldCrawlCategories = availableCategories.filter(category =>
+    shouldCrawlCategoriesName.includes(category.displayName)
+  )
+  const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
+  const urlLIst = await locationWithCategorys.reduce(async (carry, [location, category]) => {
+    const lastCarry = await carry
+    const description = generateGetUrlApiDescription(location)(category)
+    const url = await readDescription(page)(description)
+    return [...lastCarry, url]
+  }, [])
   networKMangeer.log()
-  await screenshot(page)({ path: `${screenshotDir}/after.jpg`, quality: 20 })
   await browser.close()
-  return "hello"
+  return urlLIst
+}
+
+const storeData = fileName => data => {
+  const fs = require("fs")
+  fs.writeFileSync(fileName, JSON.stringify(data))
+}
+
+const findStore = async () => {
+  const { availableLocations, availableCategories } = await findLocationCategory()
+  storeData("location-category.json")({ availableLocations, availableCategories })
+  const apiUrlList = await findApiUrl({ availableLocations, availableCategories })
+  storeData("api-list.json")(apiUrlList)
+  return apiUrlList
 }
 
 var exports = (module.exports = findStore)
