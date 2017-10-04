@@ -389,7 +389,7 @@ const findLocationCategory = async () => {
 }
 
 const findApiUrl = async ({ availableLocations, availableCategories }) => {
-  const browser = await puppeteer.launch(config.launch)
+  let browser = await puppeteer.launch(config.launch)
   let page = await browser.newPage()
   await page.setViewport(viewport)
   console.log("\x1b[41m%s\x1b[0m: ", "Open new page") //yellow
@@ -418,16 +418,31 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
   )
   const locationWithCategorys = joinTwoList(availableLocations)(shouldCrawlCategories)
 
+  let urlList = []
   let count = 0
-  const urlList = await locationWithCategorys.reduce(async (carry, item) => {
-    const lastList = await carry
-    console.log("\x1b[41m%s\x1b[0m: ", `At chunk: ${count}`)
-    count++
-    return run(lastList)(item)
-  }, Promise.resolve([]))
+  try {
+    urlList = await locationWithCategorys.reduce(async (carry, item) => {
+      const lastList = await carry
+      console.log("\x1b[41m%s\x1b[0m: ", `At chunk: ${count}`)
+      count++
+      return run(lastList)(item)
+    }, Promise.resolve(urlList))
+  } catch (err) {
+    const remain = locationWithCategorys.slice(count)
+    count = count - 1
+    await browser.close()
+    console.log("\x1b[41m%s\x1b[0m: ", `[RETRY] At chunk: ${count}`)
+    browser = await puppeteer.launch(config.launch)
+    page = await browser.newPage()
+    urlList = await remain.reduce(async (carry, item) => {
+      const lastList = await carry
+      console.log("\x1b[41m%s\x1b[0m: ", `At chunk: ${count}`)
+      count++
+      return run(lastList)(item)
+    }, Promise.resolve(urlList))
+  }
 
   networKManger.log()
-  await page.close()
   await browser.close()
 
   return urlList
