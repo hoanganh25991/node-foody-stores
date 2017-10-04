@@ -104,7 +104,7 @@ const loginDescription = [
       },
       {
         title: `Evaluate`,
-        evaluate: () => {
+        evaluate: async () => {
           const inputNodeList = document.querySelectorAll(
             "#fdDlgSearchFilter > div.sf-right > div:nth-child(2) > ul > li > input"
           )
@@ -112,14 +112,15 @@ const loginDescription = [
           for (let i = 0; i < inputNodeList.length; i++) {
             inputList.push(inputNodeList[i])
           }
-          const availableLocations = inputList.map(inputElement => {
+          const availableLocations = await inputList.reduce(async (carry, inputElement) => {
+            const lastCarry = await carry
             const selector = inputElement.id
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
             //noinspection JSUnresolvedFunction
-            const locationId = 1
-            return { selector, displayName, locationId }
-          })
+            const locationId = await window.getIdFromSelector(selector)
+            return [...lastCarry, { selector, displayName, locationId }]
+          }, [])
           return availableLocations
         },
         storeReturnAsKey: "availableLocations"
@@ -139,7 +140,7 @@ const loginDescription = [
       },
       {
         title: `Evaluate`,
-        evaluate: () => {
+        evaluate: async () => {
           const inputNodeList = document.querySelectorAll(
             "#fdDlgSearchFilter > div.sf-right > div:nth-child(1) > ul > li > input"
           )
@@ -147,17 +148,16 @@ const loginDescription = [
           for (let i = 0; i < inputNodeList.length; i++) {
             inputList.push(inputNodeList[i])
           }
-          const a = window.getIdFromSelector("adfasdf-2")
-          console.log(a)
-          const availableLocations = inputList.map(inputElement => {
+          const availableCategories = await inputList.reduce(async (carry, inputElement) => {
+            const lastCarry = await carry
             const selector = inputElement.id
             const labelElement = inputElement.nextElementSibling
             const displayName = labelElement.innerText
             //noinspection JSUnresolvedFunction
-            const categoryId = 1
-            return { selector, displayName, categoryId }
-          })
-          return availableLocations
+            const categoryId = await window.getIdFromSelector(selector)
+            return [...lastCarry, { selector, displayName, categoryId }]
+          }, [])
+          return availableCategories
         },
         storeReturnAsKey: "availableCategories"
       }
