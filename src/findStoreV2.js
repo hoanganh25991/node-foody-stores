@@ -60,6 +60,7 @@ const todayDDMMYYY = () => {
   return todayStr
 }
 
+// www.google-analytics.com
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
   const requestUrlList = []
