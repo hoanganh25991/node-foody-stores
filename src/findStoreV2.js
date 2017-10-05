@@ -70,6 +70,29 @@ const getPhoneNumber = async storeId => {
   return phoneNumber
 }
 
+const getOpenCloseTime = async url => {
+  // const res = await callFoodyApi(url)
+  // const matchOpenTime = res.match(//i)
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  const fullDetailUrl = url
+  console.log("Go to page", fullDetailUrl)
+  await page.goto(fullDetailUrl, { timeout: 60 * 1000 })
+  console.log("Go to page ok")
+  // const activeTime = await page.evaluate(async () => {
+  //   const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")
+  //   const activeTimeStr = activeTimeSpan.innerText
+  //   const activeTime = activeTimeStr.match(/(\d{2}:\d{2})/gi)
+  //
+  //   // const contactElm = document.querySelector("#show-phone-number")
+  //   // contactElm.click()
+  //
+  //   return activeTime
+  // })
+
+  return []
+}
+
 const readOne = lastStores => page => async url => {
   console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${url}`)
   let count = 1
@@ -161,8 +184,9 @@ const run = async () => {
   // const storesBranch = "stores"
   // const storeIndexKey = "id"
   // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
-  const phoneNumber = await getPhoneNumber(203958)
-  console.log(phoneNumber)
+  // const phoneNumber = await getPhoneNumber(203958)
+  // const activeTime = await getOpenCloseTime("https://www.foody.vn/ho-chi-minh/khoai-mon-ngon-nha-trang")
+  console.log(activeTime)
   process.exit()
 }
 
