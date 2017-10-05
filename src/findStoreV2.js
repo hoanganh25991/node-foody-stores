@@ -1,10 +1,7 @@
 const updateToFirebase = require("./updateToFirebase")
-const { puppeteer: config } = require("./config")
-const puppeteer = require("puppeteer")
 const { logWithInfo } = require("./log")
-
 const { urlList } = require("./utils")
-const { needStoreKeys } = require("./config")
+const { needStoreKeys } = require("./_config")
 const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const { TinyPage } = require("./page")
 
@@ -26,8 +23,8 @@ const storeIndexKey = "id"
  }
  */
 const readOne = lastSummaryTotal => page => async urlEndpoint => {
-  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${urlEndpoint}`)
-  let page = 1
+  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at MAIN url`, urlEndpoint)
+  let page = 0
   let stillHasStores = true
   let stores = []
 
@@ -45,6 +42,7 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
       const lastStoreList = await carry
 
+      logWithInfo(`Rebuild store data`, 1)
       //noinspection JSUnresolvedFunction
       const store = needStoreKeys.reduce((carry, key) => {
         const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
@@ -52,16 +50,21 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
         return carry
       }, {})
 
+      logWithInfo(`Find store 'createdDate'`, 1)
       const createdDate = await getStoreCreatedDate(store.id)
       Object.assign(store, { createdDate })
 
+      logWithInfo(`Find store 'phoneNumber'`, 1)
       const phoneNumber = await getPhoneNumber(store.id)
       Object.assign(store, { phoneNumber })
 
+      logWithInfo(`Find store 'openingHours'`, 1)
       //noinspection JSUnresolvedVariable
       const openingHours = await getOpeningHours(store.detailUrl)
       const [openingAt, closedAt] = openingHours
       Object.assign(store, { openingAt, closedAt })
+
+      logWithInfo(`Complete rebuild store`, 1)
 
       return [...lastStoreList, store]
     }, [])
@@ -84,7 +87,7 @@ const run = async () => {
   }, 0)
 
   logWithInfo(`Find ${totalStoreFound} stores`)
-
+  page.close()
   process.exit()
 }
 
