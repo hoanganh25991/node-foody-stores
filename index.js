@@ -2,9 +2,11 @@ const logWithInfo = require("./src/logWithInfo")
 const logExactErrMsg = require("./src/logExactErrMsg")
 const findStore = require("./src/findStore")
 const callFoodyApi = require("./src/callFoodyApi")
+const sendNotification = require("./src/sendNotification")
 
 const run = async function() {
-  const pageInfo = await findStore()
+  await sendNotification("DONE", { headings: { en: "Crawling XXX" } })
+  // const pageInfo = await findStore()
   // console.log(pageInfo)
   // const apiUrl = "https://www.foody.vn/ho-chi-minh/an-vat-via-he-tai-quan-2?c=an-vat-via-he"
   // const stores = await callFoodyApi(apiUrl)

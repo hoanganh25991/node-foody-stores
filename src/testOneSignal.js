@@ -48,5 +48,5 @@ var sendNotification = (content, messageObj = null) => {
 //   headings: {"en": "Crawling Foody Stores"},
 //   included_segments: ["TestUsers"]
 // };
-// sendNotification("DONE", {headings: {"en": "Crawling XXX"}});
+sendNotification("DONE", { headings: { en: "Crawling XXX" } })
 var exports = (module.exports = sendNotification)
