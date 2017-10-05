@@ -9,7 +9,8 @@ const viewport = { width: 1200, height: 600 }
 const screenshotDir = "screenshot"
 const jsonLogDir = "tmp"
 
-const NetworkManager = page => {
+const NetworkManager = async page => {
+  await page.setRequestInterceptionEnabled(true)
   const requestUrlList = []
   const requestList = []
   page.on("request", interceptedRequest => {
@@ -379,7 +380,6 @@ const findLocationCategory = async () => {
   const page = await browser.newPage()
   await page.goto(homepage)
   await page.setViewport(viewport)
-  await page.setRequestInterceptionEnabled(true)
   const networKMangeer = NetworkManager(page)
   const { availableLocations, availableCategories } = await readDescription(page)(loginDescription)
   networKMangeer.log()
@@ -394,7 +394,7 @@ const findApiUrl = async ({ availableLocations, availableCategories }) => {
   await page.setViewport(viewport)
   console.log("\x1b[41m%s\x1b[0m: ", "Open new page") //yellow
   await page.setRequestInterceptionEnabled(true)
-  const networKManger = NetworkManager(page)
+  const networKManger = await NetworkManager(page)
 
   const run = lastList => async ([location, category]) => {
     await page.goto(homepage)

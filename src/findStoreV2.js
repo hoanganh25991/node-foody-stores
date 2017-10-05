@@ -60,6 +60,27 @@ const todayDDMMYYY = () => {
   return todayStr
 }
 
+const NetworkManager = async page => {
+  await page.setRequestInterceptionEnabled(true)
+  const requestUrlList = []
+  const requestList = []
+  page.on("request", interceptedRequest => {
+    requestList.push(interceptedRequest)
+    requestUrlList.push(interceptedRequest.url)
+    if (interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".jpg")) interceptedRequest.abort()
+    else interceptedRequest.continue()
+  })
+  // page.on("console", msg => console.log(msg))
+  return {
+    log() {
+      logWithInfo(`[NetworkManager] Summary: ${requestUrlList.length} requets`)
+    },
+    get() {
+      return requestUrlList
+    }
+  }
+}
+
 const getPhoneNumber = async storeId => {
   const urlEndpoint = `https://www.foody.vn/__get/Restaurant/RestaurantPhone`
   const fullUrl = `${urlEndpoint}?resId=${storeId}`
@@ -75,22 +96,23 @@ const getOpenCloseTime = async url => {
   // const matchOpenTime = res.match(//i)
   const browser = await puppeteer.launch(config.launch)
   const page = await browser.newPage()
+  const net = await NetworkManager(page)
   const fullDetailUrl = url
   console.log("Go to page", fullDetailUrl)
   await page.goto(fullDetailUrl, { timeout: 60 * 1000 })
   console.log("Go to page ok")
-  // const activeTime = await page.evaluate(async () => {
-  //   const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")
-  //   const activeTimeStr = activeTimeSpan.innerText
-  //   const activeTime = activeTimeStr.match(/(\d{2}:\d{2})/gi)
-  //
-  //   // const contactElm = document.querySelector("#show-phone-number")
-  //   // contactElm.click()
-  //
-  //   return activeTime
-  // })
+  const activeTime = await page.evaluate(async () => {
+    const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")
+    const activeTimeStr = activeTimeSpan.innerText
+    const activeTime = activeTimeStr.match(/(\d{2}:\d{2})/gi)
 
-  return []
+    // const contactElm = document.querySelector("#show-phone-number")
+    // contactElm.click()
+
+    return activeTime
+  })
+  net.log()
+  return activeTime
 }
 
 const readOne = lastStores => page => async url => {
@@ -185,7 +207,7 @@ const run = async () => {
   // const storeIndexKey = "id"
   // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
   // const phoneNumber = await getPhoneNumber(203958)
-  // const activeTime = await getOpenCloseTime("https://www.foody.vn/ho-chi-minh/khoai-mon-ngon-nha-trang")
+  const activeTime = await getOpenCloseTime("https://www.foody.vn/ho-chi-minh/khoai-mon-ngon-nha-trang")
   console.log(activeTime)
   process.exit()
 }
