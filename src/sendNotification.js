@@ -34,4 +34,4 @@ const sendNotification = (content, messageObj = null) => {
   return waitReqFinish
 }
 
-var exports = (module.exports = sendNotification)
+module.exports = sendNotification
