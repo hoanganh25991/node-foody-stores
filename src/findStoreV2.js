@@ -1,3 +1,6 @@
+const updateToFirebase = require("./updateToFirebase")
+const { puppeteer: config } = require("./config")
+const puppeteer = require("puppeteer")
 const logWithInfo = require("./logWithInfo")
 const callFoodyApi = require("./callFoodyApi")
 const apiUrlList = require("./api-list.test.json")
@@ -7,8 +10,6 @@ const urlList = apiUrlList.map(lcXX => {
   const { url } = urlObj
   return url
 })
-
-const updateStoreToFirebase = require("./updateStoreToFirebase")
 
 const needKeys = [
   "Address",
@@ -59,7 +60,7 @@ const todayDDMMYYY = () => {
   return todayStr
 }
 
-const readOne = lastStores => async url => {
+const readOne = lastStores => page => async url => {
   console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${url}`)
   let count = 1
   let stillHasStores = true
@@ -79,11 +80,11 @@ const readOne = lastStores => async url => {
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
       const lastStoreList = await carry
       const store = needKeys.reduce((carry, key) => {
-        const myKey = key.charAt(0).toUpperCase() + key.substring(1)
+        const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
         carry[myKey] = originStore[key]
         return carry
       }, {})
-      const { Id: id } = store
+      const { id } = store
       const reviewUrl = `https://www.foody.vn/__get/Review/ResLoadMore?ResId=${id}&isLatest=false&Count=1`
       const res = await callFoodyApi(reviewUrl)
       const { Items: reviews } = res
@@ -93,7 +94,22 @@ const readOne = lastStores => async url => {
         const { CreatedOnTimeDiff } = firstReviews
         createdDate = CreatedOnTimeDiff
       }
-      store["CreatedDate"] = createdDate
+      store["createdDate"] = createdDate
+      const { detailUrl } = store
+      const fullDetailUrl = `https://www.foody.vn${detailUrl}`
+      // await page.goto(fullDetailUrl)
+      // const activeTime = await page.evaluate(async () => {
+      //   const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")
+      //   const activeTimeStr = activeTimeSpan.innerText
+      //   const activeTime = activeTimeStr.match(/(\d{2}:\d{2})/gi)
+      //
+      //   // const contactElm = document.querySelector("#show-phone-number")
+      //   // contactElm.click()
+      //
+      //   return activeTime
+      // })
+      // const [openingAt, closedAt] = activeTime
+      // Object.assign(store, {openingAt, closedAt})
       return [...lastStoreList, store]
     }, [])
 
@@ -106,29 +122,35 @@ const readOne = lastStores => async url => {
 
 // readOne(urlList[0])
 /*
-  {
-    "seoData": {
-    "MetaTitle": "Địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM",
-      "MetaKeywords": null,
-      "MetaDescription": "Danh sách  hơn 51 địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM. Foody.vn là website #1 tại VN về tìm kiếm địa điểm, có hàng ngàn bình luận, hình ảnh"
-  },
-    "searchItems": [],
-    "searchUrl": "/ho-chi-minh/an-vat-via-he-tai-quan-2?c=an-vat-via-he&categorygroup=food",
-    "totalResult": 51,
-    "totalSubItems": 2
-  }
-*/
+ {
+ "seoData": {
+ "MetaTitle": "Địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM",
+ "MetaKeywords": null,
+ "MetaDescription": "Danh sách  hơn 51 địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM. Foody.vn là website #1 tại VN về tìm kiếm địa điểm, có hàng ngàn bình luận, hình ảnh"
+ },
+ "searchItems": [],
+ "searchUrl": "/ho-chi-minh/an-vat-via-he-tai-quan-2?c=an-vat-via-he&categorygroup=food",
+ "totalResult": 51,
+ "totalSubItems": 2
+ }
+ */
 
 const run = async () => {
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
   const stores = await urlList.reduce(async (carry, url) => {
     const lastStores = await carry
-    return readOne(lastStores)(url)
+    return readOne(lastStores)(page)(url)
   }, [])
 
+  await browser.close()
   console.log(stores.length)
   console.log(stores[0])
   console.log("\x1b[41m%s\x1b[0m: ", `Update stores to firebase`)
-  await updateStoreToFirebase(stores)
+  // const mainBranch = "nodeFoodyStores"
+  // const storesBranch = "stores"
+  // const storeIndexKey = "id"
+  // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
   process.exit()
 }
 
