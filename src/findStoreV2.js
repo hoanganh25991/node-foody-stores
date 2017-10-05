@@ -60,6 +60,16 @@ const todayDDMMYYY = () => {
   return todayStr
 }
 
+const getPhoneNumber = async storeId => {
+  const urlEndpoint = `https://www.foody.vn/__get/Restaurant/RestaurantPhone`
+  const fullUrl = `${urlEndpoint}?resId=${storeId}`
+  const res = await callFoodyApi(fullUrl, "text")
+  //noinspection JSUnresolvedFunction
+  const matchPhoneArr = res.match(/<span.+>(.+)<\/span>/i)
+  const phoneNumber = matchPhoneArr ? matchPhoneArr[1] : null
+  return phoneNumber
+}
+
 const readOne = lastStores => page => async url => {
   console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${url}`)
   let count = 1
@@ -136,21 +146,23 @@ const readOne = lastStores => page => async url => {
  */
 
 const run = async () => {
-  const browser = await puppeteer.launch(config.launch)
-  const page = await browser.newPage()
-  const stores = await urlList.reduce(async (carry, url) => {
-    const lastStores = await carry
-    return readOne(lastStores)(page)(url)
-  }, [])
-
-  await browser.close()
-  console.log(stores.length)
-  console.log(stores[0])
-  console.log("\x1b[41m%s\x1b[0m: ", `Update stores to firebase`)
+  // const browser = await puppeteer.launch(config.launch)
+  // const page = await browser.newPage()
+  // const stores = await urlList.reduce(async (carry, url) => {
+  //   const lastStores = await carry
+  //   return readOne(lastStores)(page)(url)
+  // }, [])
+  //
+  // await browser.close()
+  // console.log(stores.length)
+  // console.log(stores[0])
+  // console.log("\x1b[41m%s\x1b[0m: ", `Update stores to firebase`)
   // const mainBranch = "nodeFoodyStores"
   // const storesBranch = "stores"
   // const storeIndexKey = "id"
   // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
+  const phoneNumber = await getPhoneNumber(203958)
+  console.log(phoneNumber)
   process.exit()
 }
 

@@ -4,7 +4,7 @@
  * @param apiUrl
  */
 
-const callFoodyApi = async apiUrl => {
+const callFoodyApi = async (apiUrl, parse = "json") => {
   const fetch = require("isomorphic-fetch")
   const res = await fetch(apiUrl, {
     headers: {
@@ -14,7 +14,7 @@ const callFoodyApi = async apiUrl => {
       "postman-token": "95e7e2c4-b47b-7467-ee3f-760bf31df3e3"
     }
   })
-  const stores = await res.json()
+  const stores = await res[parse]()
   // console.log(stores)
   return stores
 }
