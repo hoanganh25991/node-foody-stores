@@ -89,12 +89,13 @@ const findStore = async () => {
   logDebug(`Find ${totalStoreFound} stores`)
   page.close()
 }
-
 ;(async () => {
   try {
     await findStore()
   } catch (err) {
     logExactErrMsg(err)
+  } finally {
+    process.exit()
   }
 })()
 
