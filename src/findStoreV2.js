@@ -30,7 +30,7 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
   do {
     page++
     const urlWithPageQuery = `${urlEndpoint}&page=${page}&append=true`
-    logDebug(`Searching page ${page}...`)
+    logDebug(`Searching page ${page}...`, 0, "\x1b[36m%s\x1b[0m")
 
     const res = await callFoodyApi(urlWithPageQuery)
     const { searchItems: searchStores } = res
@@ -40,7 +40,7 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
 
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
       const lastStoreList = await carry
-      logDebug(`Rebuild store data, storeId: ${originStore.Id}`, 1, "\x1b[36m%s\x1b[0m")
+      logDebug(`Rebuild store data, storeId: ${originStore.Id}`, 1)
 
       logDebug(`Change store key`, 2)
       //noinspection JSUnresolvedFunction
@@ -93,14 +93,19 @@ const findStore = async () => {
   page.close()
 }
 
-;(async () => {
+const crawling = async () => {
   try {
     await findStore()
   } catch (err) {
     logExactErrMsg(err)
   } finally {
+    // Auto re callApiUrl
+    // setTimeout(crawling, 6000)
+    logDebug("==============COMPLETE CRAWLING FOODY==============")
     process.exit()
   }
-})()
+}
+
+crawling()
 
 // module.exports = findStore

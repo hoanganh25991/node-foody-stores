@@ -8,5 +8,6 @@
   },
   "waitForSelector":{
     "timeout":30000
-  }
+  },
+  "retryLimit":3
 }
