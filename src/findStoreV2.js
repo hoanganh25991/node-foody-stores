@@ -5,51 +5,13 @@ const { logWithInfo } = require("./log")
 
 const { todayDDMMYYY, urlList } = require("./utils")
 const { needStoreKeys } = require("./config")
-const { callFoodyApi, getOpeningHours, getPhoneNumber } = require("./foody-api")
+const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const { TinyPage } = require("./page")
 
-const readOne = lastStores => page => async url => {
-  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${url}`)
-  let count = 1
-  let stillHasStores = true
-  let stores = []
-  do {
-    const urlWithPageQuery = `${url}&page=${count}`
-    count++
-    const res = await callFoodyApi(urlWithPageQuery)
-    const { searchUrl, searchItems: searchStores } = res
+const mainBranch = "nodeFoodyStores"
+const storesBranch = "stores"
+const storeIndexKey = "id"
 
-    logWithInfo(`Searching...`)
-    logWithInfo(`Search url: ${searchUrl}`, 1)
-    logWithInfo(`Search find: ${searchStores.length} stores`, 1)
-
-    if (!searchStores.length) stillHasStores = false
-
-    const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
-      const lastStoreList = await carry
-      const store = needStoreKeys.reduce((carry, key) => {
-        const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
-        carry[myKey] = originStore[key]
-        return carry
-      }, {})
-      const { id } = store
-
-      store["createdDate"] = createdDate
-      const { detailUrl } = store
-      const openingHours = await getOpeningHours(detailUrl)
-      const [openingAt, closedAt] = openingHours
-      Object.assign(store, { openingAt, closedAt })
-      return [...lastStoreList, store]
-    }, [])
-
-    stores = [...stores, ...storesWithNeedInfo]
-  } while (stillHasStores)
-  // console.log(stores, stores.length)
-  const next = [...lastStores, ...stores]
-  return next
-}
-
-// readOne(urlList[0])
 /*
  {
  "seoData": {
@@ -63,26 +25,62 @@ const readOne = lastStores => page => async url => {
  "totalSubItems": 2
  }
  */
+const readOne = lastSummaryTotal => page => async urlEndpoint => {
+  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${urlEndpoint}`)
+  let page = 1
+  let stillHasStores = true
+  let stores = []
+
+  do {
+    page++
+    const urlWithPageQuery = `${urlEndpoint}&page=${page}`
+    logWithInfo(`Searching page ${page}...`)
+
+    const res = await callFoodyApi(urlWithPageQuery)
+    const { searchItems: searchStores } = res
+    logWithInfo(`Search find: ${searchStores.length} stores`, 1)
+
+    if (!searchStores.length) stillHasStores = false
+
+    const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
+      const lastStoreList = await carry
+
+      //noinspection JSUnresolvedFunction
+      const store = needStoreKeys.reduce((carry, key) => {
+        const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
+        carry[myKey] = originStore[key]
+        return carry
+      }, {})
+
+      const createdDate = await getStoreCreatedDate(store.id)
+      Object.assign(store, { createdDate })
+      //noinspection JSUnresolvedVariable
+      const openingHours = await getOpeningHours(store.detailUrl)
+      const [openingAt, closedAt] = openingHours
+      Object.assign(store, { openingAt, closedAt })
+
+      return [...lastStoreList, store]
+    }, [])
+
+    stores = [...stores, ...storesWithNeedInfo]
+  } while (stillHasStores)
+
+  await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
+
+  const nextSummaryTotal = lastSummaryTotal + stores.length
+  return nextSummaryTotal
+}
 
 const run = async () => {
-  // const browser = await puppeteer.launch(config.launch)
-  // const page = await browser.newPage()
-  // const stores = await urlList.reduce(async (carry, url) => {
-  //   const lastStores = await carry
-  //   return readOne(lastStores)(page)(url)
-  // }, [])
-  //
-  // await browser.close()
-  // console.log(stores.length)
-  // console.log(stores[0])
-  // console.log("\x1b[41m%s\x1b[0m: ", `Update stores to firebase`)
-  // const mainBranch = "nodeFoodyStores"
-  // const storesBranch = "stores"
-  // const storeIndexKey = "id"
-  // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
-  // const phoneNumber = await getPhoneNumber(203958)
-  const activeTime = await getOpenCloseTime("https://www.foody.vn/ho-chi-minh/khoai-mon-ngon-nha-trang")
-  console.log(activeTime)
+  const page = await TinyPage()
+  //noinspection JSUnresolvedFunction
+  const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
+    const lastStores = await carry
+    return readOne(lastStores)(page)(urlEndpoint)
+  }, 0)
+
+  logWithInfo(`Find ${totalStoreFound} stores`)
+
   process.exit()
 }
 
