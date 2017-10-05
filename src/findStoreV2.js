@@ -1,16 +1,14 @@
 const logWithInfo = require("./logWithInfo")
 const callFoodyApi = require("./callFoodyApi")
-const fs = require("fs")
-const apiStr = fs.readFileSync(`${__dirname}/api-list.test.json`)
-const apiUrlList = JSON.parse(apiStr)
-// console.log(apiUrlList)
+const apiUrlList = require("./api-list.test.json")
+//noinspection JSUnresolvedFunction
 const urlList = apiUrlList.map(lcXX => {
   const urlObj = Object.values(lcXX)[0]
   const { url } = urlObj
   return url
 })
 
-logWithInfo(`List has ${urlList.length} urls`)
+const updateStoreToFirebase = require("./updateStoreToFirebase")
 
 const needKeys = [
   "Address",
@@ -62,6 +60,7 @@ const todayDDMMYYY = () => {
 }
 
 const readOne = lastStores => async url => {
+  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at main url: ${url}`)
   let count = 1
   let stillHasStores = true
   let stores = []
@@ -70,9 +69,11 @@ const readOne = lastStores => async url => {
     count++
     const res = await callFoodyApi(urlWithPageQuery)
     const { searchUrl, searchItems: searchStores } = res
+
     logWithInfo(`Searching...`)
     logWithInfo(`Search url: ${searchUrl}`, 1)
     logWithInfo(`Search find: ${searchStores.length} stores`, 1)
+
     if (!searchStores.length) stillHasStores = false
 
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
@@ -125,6 +126,9 @@ const run = async () => {
 
   console.log(stores.length)
   console.log(stores[0])
+  console.log("\x1b[41m%s\x1b[0m: ", `Update stores to firebase`)
+  await updateStoreToFirebase(stores)
+  process.exit()
 }
 
 run()
