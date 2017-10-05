@@ -4,7 +4,7 @@ const { logDebug } = require("../log")
 const getOpeningHours = async storeDetailUrl => {
   const page = await TinyPage()
   const url = `${urlEndPoint}${storeDetailUrl}`
-  logDebug(url)
+  logDebug(url, 2)
   await page.goto(url, { timeout: 60 * 1000 })
   const activeTime = await page.evaluate(async () => {
     const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")

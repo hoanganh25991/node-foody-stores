@@ -1,6 +1,7 @@
 const logWithInfo = require("./logWithInfo")
-const logDebug = (logs, sublevel = 0) => {
+const logDebug = (logs, sublevel = 0, style = "%s") => {
   const debug = process.env.DEBUG
-  if (debug && debug != "false") logWithInfo(logs, sublevel)
+  const logLevel = process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 0
+  if (debug && debug != "false" && logLevel <= sublevel) logWithInfo(logs, sublevel, style)
 }
 module.exports = logDebug

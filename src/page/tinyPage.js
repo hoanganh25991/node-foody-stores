@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer")
 const { puppeteer: puppeteerConf } = require("../_config")
 const NetworkManager = require("./NetworkManager")
+const { logDebug } = require("../log")
 
 const TinyPage = async () => {
   //noinspection JSUnresolvedVariable

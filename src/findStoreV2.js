@@ -1,13 +1,11 @@
 const updateToFirebase = require("./updateToFirebase")
-const { logWithInfo } = require("./log")
+const { logDebug } = require("./log")
 const { urlList } = require("./utils")
-const { needStoreKeys } = require("./_config")
+const { needStoreKeys, firebaseBranch } = require("./_config")
 const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const { TinyPage } = require("./page")
 
-const mainBranch = "nodeFoodyStores"
-const storesBranch = "stores"
-const storeIndexKey = "id"
+const { mainBranch, storesBranch, storeIndexKey } = firebaseBranch
 
 /*
  {
@@ -23,7 +21,8 @@ const storeIndexKey = "id"
  }
  */
 const readOne = lastSummaryTotal => page => async urlEndpoint => {
-  console.log("\x1b[41m%s\x1b[0m: ", `Crawling stores at MAIN url`, urlEndpoint)
+  logDebug(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
+  logDebug(urlEndpoint)
   let page = 0
   let stillHasStores = true
   let stores = []
@@ -31,18 +30,19 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
   do {
     page++
     const urlWithPageQuery = `${urlEndpoint}&page=${page}`
-    logWithInfo(`Searching page ${page}...`)
+    logDebug(`Searching page ${page}...`)
 
     const res = await callFoodyApi(urlWithPageQuery)
     const { searchItems: searchStores } = res
-    logWithInfo(`Search find: ${searchStores.length} stores`, 1)
+    logDebug(`Search find: ${searchStores.length} stores`, 1)
 
     if (!searchStores.length) stillHasStores = false
 
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
       const lastStoreList = await carry
+      logDebug(`Rebuild store data, storeId: ${originStore.Id}`, 1, "\x1b[36m%s\x1b[0m")
 
-      logWithInfo(`Rebuild store data`, 1)
+      logDebug(`Change store key`, 2)
       //noinspection JSUnresolvedFunction
       const store = needStoreKeys.reduce((carry, key) => {
         const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
@@ -50,21 +50,21 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
         return carry
       }, {})
 
-      logWithInfo(`Find store 'createdDate'`, 1)
+      logDebug(`Find store 'createdDate'`, 2)
       const createdDate = await getStoreCreatedDate(store.id)
       Object.assign(store, { createdDate })
 
-      logWithInfo(`Find store 'phoneNumber'`, 1)
+      logDebug(`Find store 'phoneNumber'`, 2)
       const phoneNumber = await getPhoneNumber(store.id)
       Object.assign(store, { phoneNumber })
 
-      logWithInfo(`Find store 'openingHours'`, 1)
+      logDebug(`Find store 'openingHours'`, 2)
       //noinspection JSUnresolvedVariable
       const openingHours = await getOpeningHours(store.detailUrl)
       const [openingAt, closedAt] = openingHours
       Object.assign(store, { openingAt, closedAt })
 
-      logWithInfo(`Complete rebuild store`, 1)
+      logDebug(`Complete rebuild store`, 2)
 
       return [...lastStoreList, store]
     }, [])
@@ -86,7 +86,7 @@ const run = async () => {
     return readOne(lastStores)(page)(urlEndpoint)
   }, 0)
 
-  logWithInfo(`Find ${totalStoreFound} stores`)
+  logDebug(`Find ${totalStoreFound} stores`)
   page.close()
   process.exit()
 }
