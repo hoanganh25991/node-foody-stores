@@ -3,16 +3,22 @@ const { puppeteer: puppeteerConf } = require("../_config")
 const NetworkManager = require("./NetworkManager")
 const { logDebug } = require("../log")
 
+let browser
+
+const getBrowser = async () => {
+  if (browser) return browser
+  browser = await puppeteer.launch(puppeteerConf.launch)
+  return browser
+}
+
 const TinyPage = async () => {
+  const _browser = getBrowser()
   //noinspection JSUnresolvedVariable
-  const browser = await puppeteer.launch(puppeteerConf.launch)
-  const page = await browser.newPage()
+  const page = await _browser.newPage()
   await NetworkManager(page)
   // Enhance page, close BOTH page and browser
-  const _pageClose = page.close
-  page.close = async () => {
-    await _pageClose()
-    await browser.close()
+  page.closeBrowser = async () => {
+    await _browser.close()
   }
   return page
 }

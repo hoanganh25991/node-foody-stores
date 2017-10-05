@@ -20,17 +20,17 @@ const { mainBranch, storesBranch, storeIndexKey } = firebaseBranch
  "totalSubItems": 2
  }
  */
-const readOne = lastSummaryTotal => page => async urlEndpoint => {
+const readOne = lastSummaryTotal => async urlEndpoint => {
   logDebug(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
   logDebug(urlEndpoint)
-  let page = 0
+  let pageCount = 0
   let stillHasStores = true
   let stores = []
 
   do {
-    page++
-    const urlWithPageQuery = `${urlEndpoint}&page=${page}&append=true`
-    logDebug(`Searching page ${page}...`, 0, "\x1b[36m%s\x1b[0m")
+    pageCount++
+    const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
+    logDebug(`Searching page ${pageCount}...`, 0, "\x1b[36m%s\x1b[0m")
 
     const res = await callFoodyApi(urlWithPageQuery)
     const { searchItems: searchStores } = res
@@ -82,19 +82,17 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
 }
 
 const findStore = async () => {
-  const page = await TinyPage()
   //noinspection JSUnresolvedFunction
   const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
     const lastStores = await carry
-    return readOne(lastStores)(page)(urlEndpoint)
+    return readOne(lastStores)(urlEndpoint)
   }, 0)
-
   logDebug(`Find ${totalStoreFound} stores`)
-  page.close()
 }
 
 const crawling = async () => {
   try {
+    console.error = () => {}
     await findStore()
   } catch (err) {
     logExactErrMsg(err)
@@ -107,5 +105,4 @@ const crawling = async () => {
 }
 
 crawling()
-
 // module.exports = findStore
