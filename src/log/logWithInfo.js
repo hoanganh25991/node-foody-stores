@@ -9,8 +9,7 @@ const logWithInfo = (logs, subLevel = 0, style = "%s") => {
   const isStr = typeof logs === "string"
   switch (true) {
     case isArr: {
-      console.log(style, `[INFO] ${paddingWithRootSlash}`)
-      console.log(...logs)
+      console.log(style, `[INFO] ${paddingWithRootSlash}`, ...logs)
       break
     }
     case isStr: {

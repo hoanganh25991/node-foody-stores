@@ -1,4 +1,4 @@
-const logWithInfo = require("./logWithInfo")
+const { logDebug } = require("./log")
 const admin = require("firebase-admin")
 const serviceAccount = require("./.credential/glass-turbine.json")
 admin.initializeApp({
@@ -21,17 +21,17 @@ const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
       })
   })
   const objXKey = sameObjX ? Object.keys(sameObjX)[0] : refToObjXBranch.push().key
-  logWithInfo(`Saving store...`)
-  logWithInfo(`ObjX ${objXIndexKey} : ${id}`, 1)
-  logWithInfo(`ObjX key: ${objXKey}`, 1)
+  logDebug(`Saving store...`)
+  logDebug([`ObjX ${objXIndexKey} : ${id}`, `ObjX key: ${objXKey}`], 1)
   await db.ref(`${mainBranch}/${objXBranch}/${objXKey}`).set(objX)
+  logDebug("Saved")
 }
 
 const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => async objXs => {
   await objXs.reduce(async (carry, objX) => {
     await carry
     return updateObjX(mainBranch)(objXBranch)(objXIndexKey)(objX)
-  }, Promise.resolve(logWithInfo(["\x1b[41m%s\x1b[0m: ", `Update to firebase for objX`])))
+  }, "")
 }
 
-var exports = (module.exports = updateManyObjXs)
+module.exports = updateManyObjXs

@@ -29,7 +29,7 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
 
   do {
     page++
-    const urlWithPageQuery = `${urlEndpoint}&page=${page}`
+    const urlWithPageQuery = `${urlEndpoint}&page=${page}&append=true`
     logDebug(`Searching page ${page}...`)
 
     const res = await callFoodyApi(urlWithPageQuery)
@@ -66,13 +66,16 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
 
       logDebug(`Complete rebuild store`, 2)
 
+      logDebug(`Update store to firebase`, 1)
+      await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)([store])
+
       return [...lastStoreList, store]
     }, [])
 
     stores = [...stores, ...storesWithNeedInfo]
   } while (stillHasStores)
 
-  await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
+  // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
 
   const nextSummaryTotal = lastSummaryTotal + stores.length
   return nextSummaryTotal
@@ -89,6 +92,7 @@ const findStore = async () => {
   logDebug(`Find ${totalStoreFound} stores`)
   page.close()
 }
+
 ;(async () => {
   try {
     await findStore()
@@ -99,4 +103,4 @@ const findStore = async () => {
   }
 })()
 
-module.exports = findStore
+// module.exports = findStore
