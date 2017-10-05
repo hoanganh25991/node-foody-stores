@@ -94,6 +94,7 @@ const crawling = async () => {
   try {
     console.error = () => {}
     await findStore()
+    await TinyPage.closeBrowser()
   } catch (err) {
     logExactErrMsg(err)
   } finally {

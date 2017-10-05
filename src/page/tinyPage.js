@@ -12,15 +12,16 @@ const getBrowser = async () => {
 }
 
 const TinyPage = async () => {
-  const _browser = getBrowser()
+  const _browser = await getBrowser()
   //noinspection JSUnresolvedVariable
   const page = await _browser.newPage()
   await NetworkManager(page)
-  // Enhance page, close BOTH page and browser
-  page.closeBrowser = async () => {
-    await _browser.close()
-  }
   return page
+}
+
+TinyPage.closeBrowser = async () => {
+  let _browser = await getBrowser()
+  await _browser.close()
 }
 
 module.exports = TinyPage
