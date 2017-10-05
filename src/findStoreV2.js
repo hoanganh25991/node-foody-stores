@@ -1,5 +1,5 @@
 const updateToFirebase = require("./updateToFirebase")
-const { logDebug } = require("./log")
+const { logDebug, logExactErrMsg } = require("./log")
 const { urlList } = require("./utils")
 const { needStoreKeys, firebaseBranch } = require("./_config")
 const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
@@ -78,7 +78,7 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
   return nextSummaryTotal
 }
 
-const run = async () => {
+const findStore = async () => {
   const page = await TinyPage()
   //noinspection JSUnresolvedFunction
   const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
@@ -88,7 +88,14 @@ const run = async () => {
 
   logDebug(`Find ${totalStoreFound} stores`)
   page.close()
-  process.exit()
 }
 
-run()
+;(async () => {
+  try {
+    await findStore()
+  } catch (err) {
+    logExactErrMsg(err)
+  }
+})()
+
+module.exports = findStore

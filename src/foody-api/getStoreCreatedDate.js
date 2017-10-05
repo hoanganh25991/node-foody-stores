@@ -1,8 +1,11 @@
 const callFoodyApi = require("./callFoodyApi")
 const urlEndpoint = "https://www.foody.vn/__get/Review/ResLoadMore"
 const { todayDDMMYYY } = require("../utils")
+const { logDebug } = require("../log")
+
 const getStoreCreatedDate = async storeId => {
   const reviewUrl = `${urlEndpoint}?ResId=${storeId}&isLatest=false&Count=1`
+  logDebug(reviewUrl, 2)
   const res = await callFoodyApi(reviewUrl)
   const { Items: reviews } = res
   //noinspection JSUnresolvedVariable

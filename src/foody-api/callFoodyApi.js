@@ -9,11 +9,11 @@ const fetch = require("isomorphic-fetch")
 const callFoodyApi = async (apiUrl, parse = "json") => {
   const res = await fetch(apiUrl, {
     headers: {
-      "x-foody-user-token": "La2qAmY6rxB71YgcUruMGPqsyhy5AUUKzfbzuYyyTzr8nevJB9OP56PiNT3p",
-      "x-requested-with": "XMLHttpRequest"
+      "X-Foody-User-Token": "La2qAmY6rxB71YgcUruMGPqsyhy5AUUKzfbzuYyyTzr8nevJB9OP56PiNT3p",
+      "X-Requested-With": "XMLHttpRequest"
     }
   })
-  const stores = await res[parse]()
-  return stores
+  const resData = await res[parse]()
+  return resData
 }
 module.exports = callFoodyApi
