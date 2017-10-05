@@ -1,4 +1,4 @@
-const apiUrlList = require("./api-list.test.json")
+const apiUrlList = require("../api-list.test.json")
 
 const todayDDMMYYY = () => {
   var today = new Date()

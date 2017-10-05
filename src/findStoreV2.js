@@ -3,7 +3,7 @@ const { puppeteer: config } = require("./config")
 const puppeteer = require("puppeteer")
 const { logWithInfo } = require("./log")
 
-const { todayDDMMYYY, urlList } = require("./utils")
+const { urlList } = require("./utils")
 const { needStoreKeys } = require("./config")
 const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const { TinyPage } = require("./page")
@@ -54,6 +54,10 @@ const readOne = lastSummaryTotal => page => async urlEndpoint => {
 
       const createdDate = await getStoreCreatedDate(store.id)
       Object.assign(store, { createdDate })
+
+      const phoneNumber = await getPhoneNumber(store.id)
+      Object.assign(store, { phoneNumber })
+
       //noinspection JSUnresolvedVariable
       const openingHours = await getOpeningHours(store.detailUrl)
       const [openingAt, closedAt] = openingHours
