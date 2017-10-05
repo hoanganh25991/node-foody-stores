@@ -1,0 +1,201 @@
+{
+  "availableLocations":[
+    {
+      "selector":"#search-filter-dis-1",
+      "displayName":"Quận 1",
+      "id":1
+    },
+    {
+      "selector":"#search-filter-dis-4",
+      "displayName":"Quận 2",
+      "id":4
+    },
+    {
+      "selector":"#search-filter-dis-5",
+      "displayName":"Quận 3",
+      "id":5
+    },
+    {
+      "selector":"#search-filter-dis-6",
+      "displayName":"Quận 4",
+      "id":6
+    },
+    {
+      "selector":"#search-filter-dis-7",
+      "displayName":"Quận 5",
+      "id":7
+    },
+    {
+      "selector":"#search-filter-dis-8",
+      "displayName":"Quận 6",
+      "id":8
+    },
+    {
+      "selector":"#search-filter-dis-9",
+      "displayName":"Quận 7",
+      "id":9
+    },
+    {
+      "selector":"#search-filter-dis-10",
+      "displayName":"Quận 8",
+      "id":10
+    },
+    {
+      "selector":"#search-filter-dis-11",
+      "displayName":"Quận 9",
+      "id":11
+    },
+    {
+      "selector":"#search-filter-dis-12",
+      "displayName":"Quận 10",
+      "id":12
+    },
+    {
+      "selector":"#search-filter-dis-13",
+      "displayName":"Quận 11",
+      "id":13
+    },
+    {
+      "selector":"#search-filter-dis-14",
+      "displayName":"Quận 12",
+      "id":14
+    },
+    {
+      "selector":"#search-filter-dis-15",
+      "displayName":"Quận Bình Thạnh",
+      "id":15
+    },
+    {
+      "selector":"#search-filter-dis-16",
+      "displayName":"Quận Tân Bình",
+      "id":16
+    },
+    {
+      "selector":"#search-filter-dis-17",
+      "displayName":"Quận Phú Nhuận",
+      "id":17
+    },
+    {
+      "selector":"#search-filter-dis-19",
+      "displayName":"Quận Tân Phú",
+      "id":19
+    },
+    {
+      "selector":"#search-filter-dis-2",
+      "displayName":"Quận Gò Vấp",
+      "id":2
+    },
+    {
+      "selector":"#search-filter-dis-18",
+      "displayName":"Quận Bình Tân",
+      "id":18
+    },
+    {
+      "selector":"#search-filter-dis-693",
+      "displayName":"Quận Thủ Đức",
+      "id":693
+    },
+    {
+      "selector":"#search-filter-dis-696",
+      "displayName":"Bình Chánh",
+      "id":696
+    },
+    {
+      "selector":"#search-filter-dis-699",
+      "displayName":"Nhà Bè",
+      "id":699
+    },
+    {
+      "selector":"#search-filter-dis-695",
+      "displayName":"Hóc Môn",
+      "id":695
+    },
+    {
+      "selector":"#search-filter-dis-694",
+      "displayName":"Củ Chi",
+      "id":694
+    },
+    {
+      "selector":"#search-filter-dis-698",
+      "displayName":"Cần Giờ",
+      "id":698
+    }
+  ],
+  "availableCategories":[
+    {
+      "selector":"#search-filter-cate-12",
+      "displayName":"Sang trọng",
+      "id":12
+    },
+    {
+      "selector":"#search-filter-cate-39",
+      "displayName":"Buffet",
+      "id":39
+    },
+    {
+      "selector":"#search-filter-cate-1",
+      "displayName":"Nhà hàng",
+      "id":1
+    },
+    {
+      "selector":"#search-filter-cate-11",
+      "displayName":"Ăn vặt/vỉa hè",
+      "id":11
+    },
+    {
+      "selector":"#search-filter-cate-56",
+      "displayName":"Ăn chay",
+      "id":56
+    },
+    {
+      "selector":"#search-filter-cate-2",
+      "displayName":"Café/Dessert",
+      "id":2
+    },
+    {
+      "selector":"#search-filter-cate-3",
+      "displayName":"Quán ăn",
+      "id":3
+    },
+    {
+      "selector":"#search-filter-cate-4",
+      "displayName":"Bar/Pub",
+      "id":4
+    },
+    {
+      "selector":"#search-filter-cate-54",
+      "displayName":"Quán nhậu",
+      "id":54
+    },
+    {
+      "selector":"#search-filter-cate-43",
+      "displayName":"Beer club",
+      "id":43
+    },
+    {
+      "selector":"#search-filter-cate-6",
+      "displayName":"Tiệm bánh",
+      "id":6
+    },
+    {
+      "selector":"#search-filter-cate-44",
+      "displayName":"Tiệc tận nơi",
+      "id":44
+    },
+    {
+      "selector":"#search-filter-cate-27",
+      "displayName":"Shop Online",
+      "id":27
+    },
+    {
+      "selector":"#search-filter-cate-28",
+      "displayName":"Giao cơm văn phòng",
+      "id":28
+    },
+    {
+      "selector":"#search-filter-cate-79",
+      "displayName":"Khu Ẩm Thực",
+      "id":79
+    }
+  ]
+}

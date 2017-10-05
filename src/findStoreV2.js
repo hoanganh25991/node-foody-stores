@@ -79,7 +79,8 @@ const readOne = lastStores => async url => {
     const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
       const lastStoreList = await carry
       const store = needKeys.reduce((carry, key) => {
-        carry[key] = originStore[key]
+        const myKey = key.charAt(0).toUpperCase() + key.substring(1)
+        carry[myKey] = originStore[key]
         return carry
       }, {})
       const { Id: id } = store

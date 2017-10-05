@@ -1,6 +1,6 @@
 const logWithInfo = require("./logWithInfo")
 const admin = require("firebase-admin")
-const serviceAccount = require("./.credential/glass-turbine-148103-firebase-adminsdk-n0gsz-f4c7be2350.json")
+const serviceAccount = require("./.credential/glass-turbine.json")
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://glass-turbine-148103.firebaseio.com/"
@@ -69,7 +69,7 @@ const udpateStore = async store => {
   logWithInfo(`Store id: ${Id}`, 1)
   logWithInfo(`Store key: ${storeKey}`, 1)
 
-  await db.ref(`n${mainBranch}/${storesBranch}/${storeKey}`).set(store)
+  await db.ref(`${mainBranch}/${storesBranch}/${storeKey}`).set(store)
 }
 
 const updateStores = async stores => {
