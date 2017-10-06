@@ -6,7 +6,10 @@ const logDebug = (logs, style = "%s") => {
 
   const debug = process.env.DEBUG
   const logLevel = process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 0
-  const shouldLog = debug && debug != "false" && logLevel <= debugLogLevel
+
+  const shouldDebug = debug && debug != "false"
+  const allowedLogLevel = logLevel <= debugLogLevel
+  const shouldLog = shouldDebug && allowedLogLevel
 
   if (shouldLog) logWithInfo(logs, style)
 }
