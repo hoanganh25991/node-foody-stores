@@ -14,7 +14,8 @@ const getBrowser = async () => {
 const TinyPage = async (options = {}) => {
   const { needNewOne } = options
   if (needNewOne) {
-    await browser.close()
+    // logDebug(`Try to close previous browser`, 0, "\x1b[41m%s\x1b[0m")
+    // await browser.close()
     logDebug(`Open new browser`, 0, "\x1b[41m%s\x1b[0m")
     browser = await puppeteer.launch(puppeteerConf.launch)
   }

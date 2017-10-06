@@ -12,7 +12,7 @@ const getOpeningHours = limit => async storeDetailUrl => {
       const url = `${urlEndPoint}${storeDetailUrl}`
       logDebug(url, 2)
 
-      const options = retryCount > 1 ? { needNewOne: true } : {}
+      const options = retryCount >= 1 ? { needNewOne: true } : {}
       const page = await TinyPage(options)
 
       await page.goto(url, { timeout: 30 * 1000 })
@@ -23,7 +23,7 @@ const getOpeningHours = limit => async storeDetailUrl => {
         return activeTime
       })
       page.close()
-      return activeTime
+      return activeTime ? activeTime : [null, null]
     } catch (err) {
       hasError = true
     } finally {
