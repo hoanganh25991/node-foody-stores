@@ -11,7 +11,13 @@ const getBrowser = async () => {
   return browser
 }
 
-const TinyPage = async () => {
+const TinyPage = async (options = {}) => {
+  const { needNewOne } = options
+  if (needNewOne) {
+    await browser.close()
+    logDebug(`Open new browser`, 0, "\x1b[41m%s\x1b[0m")
+    browser = await puppeteer.launch(puppeteerConf.launch)
+  }
   const _browser = await getBrowser()
   //noinspection JSUnresolvedVariable
   const page = await _browser.newPage()

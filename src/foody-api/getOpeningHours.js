@@ -9,9 +9,12 @@ const getOpeningHours = limit => async storeDetailUrl => {
   do {
     try {
       if (retryCount) logDebug(`[RETRY] ${retryCount} times, at url: ${storeDetailUrl}`, 2, "\x1b[41m%s\x1b[0m")
-      const page = await TinyPage()
       const url = `${urlEndPoint}${storeDetailUrl}`
       logDebug(url, 2)
+
+      const options = retryCount > 1 ? { needNewOne: true } : {}
+      const page = await TinyPage(options)
+
       await page.goto(url, { timeout: 30 * 1000 })
       const activeTime = await page.evaluate(async () => {
         const activeTimeSpan = document.querySelector("div.micro-timesopen > span:nth-child(3)")
@@ -26,8 +29,9 @@ const getOpeningHours = limit => async storeDetailUrl => {
     } finally {
       retryCount++
     }
-  } while (hasError && retryCount < limit)
+  } while (hasError && retryCount <= limit)
 
+  logDebug(`Fail to find OpeningHours return as [null, null]`, 0, "\x1b[41m%s\x1b[0m")
   return [null, null]
 }
 
