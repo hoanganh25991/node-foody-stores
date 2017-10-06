@@ -1,4 +1,4 @@
-const logWithInfo = require("../log/logWithInfo")
+const logWithInfo = require("../log/logInfo")
 // www.google-analytics.com
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)

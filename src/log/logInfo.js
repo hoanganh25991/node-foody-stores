@@ -1,6 +1,6 @@
 const store = require("../store")
 
-const logWithInfo = (logs, style = "%s") => {
+const logInfo = (logs, style = "%s") => {
   const { logLevel = 1, spaceIndent = 2 } = store.getState()
 
   const padding = Array(logLevel * spaceIndent + 1).join(" ")
@@ -27,4 +27,4 @@ const logWithInfo = (logs, style = "%s") => {
   return
 }
 
-module.exports = logWithInfo
+module.exports = logInfo

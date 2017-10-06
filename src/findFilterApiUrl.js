@@ -1,8 +1,8 @@
 const defer = require("./defer")
-const logWithInfo = require("./logWithInfo")
+const logWithInfo = require("./logInfo")
 const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
-const logExactErrMsg = require("./logExactErrMsg")
+const logExactErrMsg = require("./logErr")
 const { screenshot } = require("./pageUtils")
 const homepage = "https://www.foody.vn/ho-chi-minh#/places"
 const viewport = { width: 1200, height: 600 }

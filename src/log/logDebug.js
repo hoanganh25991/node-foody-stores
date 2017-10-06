@@ -1,6 +1,6 @@
 const store = require("../store")
 
-const logWithInfo = require("./logWithInfo")
+const logWithInfo = require("./logInfo")
 const logDebug = (logs, style = "%s") => {
   const { debugLogLevel = 10 } = store.getState()
 

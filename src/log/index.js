@@ -1,10 +1,10 @@
-const logWithInfo = require("./logWithInfo")
-const logExactErrMsg = require("./logExactErrMsg")
+const logInfo = require("./logInfo")
+const logErr = require("./logErr")
 const logDebug = require("./logDebug")
-const logInfoAwait = require("./logInfoAwait")
+const logAwait = require("./logAwait")
 module.exports = {
-  logWithInfo,
-  logExactErrMsg,
+  logInfo,
+  logErr,
   logDebug,
-  logInfoAwait
+  logAwait
 }

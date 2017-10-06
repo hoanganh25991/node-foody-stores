@@ -1,5 +1,5 @@
-const logWithInfo = require("./src/logWithInfo")
-const logExactErrMsg = require("./src/logExactErrMsg")
+const logWithInfo = require("./src/logInfo")
+const logExactErrMsg = require("./src/logErr")
 const findStore = require("./src/findFilterApiUrl")
 const callFoodyApi = require("./src/callFoodyApi")
 const sendNotification = require("./src/utils/sendNotification")
