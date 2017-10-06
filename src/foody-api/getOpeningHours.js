@@ -8,9 +8,9 @@ const getOpeningHours = limit => async storeDetailUrl => {
   let retryCount = 0
   do {
     try {
-      if (retryCount) logDebug(`[RETRY] ${retryCount} times, at url: ${storeDetailUrl}`, 2, "\x1b[41m%s\x1b[0m")
+      // if (retryCount) logDebug(`[RETRY] ${retryCount} times, at url: ${storeDetailUrl}`, 2, "\x1b[41m%s\x1b[0m")
       const url = `${urlEndPoint}${storeDetailUrl}`
-      logDebug(url, 2)
+      // logDebug(url, 2)
 
       const options = retryCount >= 1 ? { needNewOne: true } : {}
       const page = await TinyPage(options)
@@ -31,7 +31,7 @@ const getOpeningHours = limit => async storeDetailUrl => {
     }
   } while (hasError && retryCount <= limit)
 
-  logDebug(`Fail to find OpeningHours return as [null, null]`, 0, "\x1b[41m%s\x1b[0m")
+  // logDebug(`Fail to find OpeningHours return as [null, null]`, 0, "\x1b[41m%s\x1b[0m")
   return [null, null]
 }
 

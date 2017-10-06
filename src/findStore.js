@@ -1,4 +1,4 @@
-const { logDebug: _, logExactErrMsg } = require("./log")
+const { logDebug: _, logErr, logAwait } = require("./log")
 const { urlList, redo, sendNotification, hideErrorLog } = require("./utils")
 const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
 const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
@@ -75,19 +75,20 @@ const findStore = async () => {
     const lastTotal = await carry
     return crawlingStoresFromApiUrl(lastTotal)(urlEndpoint)
   }, 0)
-  _(`Find ${totalStoreFound} stores`)
+  // _(`Find ${totalStoreFound} stores`)
 }
 
 // Run module
 ;(async () => {
   try {
     hideErrorLog()
-    await findStore()
+    // await findStore()
+    await logAwait(findStore, null, "Find store")
   } catch (err) {
-    logExactErrMsg(err)
+    logErr(err)
   } finally {
     _("==============COMPLETE CRAWLING FOODY==============")
-    await sendNotification("Complete", { headings: { en: "Crawling Foody" } })
+    // await sendNotification("Complete", { headings: { en: "Crawling Foody" } })
     process.exit()
   }
 })()

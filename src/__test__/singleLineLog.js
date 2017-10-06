@@ -2,7 +2,7 @@ var log = require("single-line-log").stdout
 const fs = require("fs")
 // or pass any stream:
 // var log = require('single-line-log')(process.stdout);
-const filePath = `${__dirname}/../tmp/crawling-foody-stores_2017-10-04_232536.wmv`
+const filePath = `${__dirname}/../../tmp/crawling-foody-stores_2017-10-04_232536.wmv`
 var read = 0
 var size = fs.statSync(filePath).size
 var rs = fs.createReadStream(filePath)

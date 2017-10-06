@@ -5,7 +5,7 @@ const { logDebug } = require("../log")
 
 const getStoreCreatedDate = async storeId => {
   const reviewUrl = `${urlEndpoint}?ResId=${storeId}&isLatest=false&Count=1`
-  logDebug(reviewUrl, 2)
+  // logDebug(reviewUrl, 2)
   const res = await callFoodyApi(reviewUrl)
   // logDebug(res)
   const { Items: reviews } = res
