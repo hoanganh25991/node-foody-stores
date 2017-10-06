@@ -1,5 +1,5 @@
 const { logDebug: _, logExactErrMsg } = require("./log")
-const { urlList, redo } = require("./utils")
+const { urlList, redo, sendNotification } = require("./utils")
 const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
 const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const updateToFirebase = require("./firebase/updateToFirebase")
@@ -38,7 +38,7 @@ const rebuildStore = async (originStore, needStoreKeys) => {
   return store
 }
 
-const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
+const saveStores = urlEndpoint => async (redoCount, lastResult, finish) => {
   const pageCount = redoCount + 1
   const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
 
@@ -47,7 +47,7 @@ const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
   const shouldBreak = foodyStores.length == 0
   if (shouldBreak) {
     finish()
-    return
+    return lastResult
   }
 
   const storesWithNeedInfo = await foodyStores.reduce(async (carry, originStore) => {
@@ -56,23 +56,24 @@ const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
     return [...lastStoreList, store]
   }, [])
 
-  return storesWithNeedInfo
+  lastResult = lastResult ? lastResult : []
+  return [...lastResult, ...storesWithNeedInfo]
 }
 
-const readOne = lastSummaryTotal => async urlEndpoint => {
+const crawlingStoresFromApiUrl = lastTotal => async urlEndpoint => {
   // _(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
   // _(urlEndpoint)
-  const stores = await redo(saveStore(urlEndpoint))
+  const stores = await redo(saveStores(urlEndpoint))
   //noinspection JSUnresolvedVariable
-  const nextSummaryTotal = lastSummaryTotal + stores.length
+  const nextSummaryTotal = lastTotal + stores.length
   return nextSummaryTotal
 }
 
 const findStore = async () => {
   //noinspection JSUnresolvedFunction
   const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
-    const lastStores = await carry
-    return readOne(lastStores)(urlEndpoint)
+    const lastTotal = await carry
+    return crawlingStoresFromApiUrl(lastTotal)(urlEndpoint)
   }, 0)
   _(`Find ${totalStoreFound} stores`)
 }
@@ -84,6 +85,7 @@ const findStore = async () => {
     logExactErrMsg(err)
   } finally {
     _("==============COMPLETE CRAWLING FOODY==============")
+    await sendNotification("Complete", { headings: { en: "Crawling Foody" } })
     process.exit()
   }
 })()

@@ -1,4 +1,4 @@
-const apiUrlList = require("../storage/api-list.bak.json")
+const apiUrlList = require("../storage/api-list.test.json")
 const sendNotification = require("./sendNotification")
 
 const todayDDMMYYY = () => {
