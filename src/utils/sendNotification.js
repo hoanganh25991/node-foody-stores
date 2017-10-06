@@ -1,4 +1,4 @@
-const { appId, apiKey } = require("./.credential/onesignal.json")
+const { appId, apiKey } = require("./../.credential/onesignal.json")
 
 const options = {
   host: "onesignal.com",

@@ -1,4 +1,5 @@
-const apiUrlList = require("../api-list.bak.json")
+const apiUrlList = require("../storage/api-list.bak.json")
+const sendNotification = require("./sendNotification")
 
 const todayDDMMYYY = () => {
   var today = new Date()
@@ -23,7 +24,11 @@ const urlList = apiUrlList.map(lcXX => {
   return url
 })
 
+const defer = async waitTime => await new Promise(resolve => setTimeout(resolve, waitTime * 1000))
+
 module.exports = {
+  defer,
   todayDDMMYYY,
-  urlList
+  urlList,
+  sendNotification
 }

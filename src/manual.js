@@ -1,5 +1,5 @@
 const { availableLocations, availableCategories } = require("./location-category.json")
-const updateManyObjXs = require("./updateToFirebase")
+const updateManyObjXs = require("./firebase/updateToFirebase")
 
 const run = async () => {
   const mainBranch = "nodeFoodyStores"

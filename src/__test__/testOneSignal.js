@@ -1,4 +1,4 @@
-const { appId, apiKey } = require("./.credential/onesignal.json")
+const { appId, apiKey } = require("./../.credential/onesignal.json")
 // const oneSignal = require('onesignal')(apiKey, appId, false)
 // oneSignal.createNotification("DONE", {included_segments: ["Test Users"]}, ["3741d556-f852-45f1-8165-85864d864397"])
 var sendNotification = (content, messageObj = null) => {
