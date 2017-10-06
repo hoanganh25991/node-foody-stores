@@ -20,6 +20,7 @@ const logAwait = async (callback, args, taskName = "No task name") => {
   const result = await callback(args)
   clearInterval(timeId)
   console.timeEnd(taskName)
+  console.log("")
   return result
 }
 
