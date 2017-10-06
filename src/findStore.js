@@ -1,5 +1,5 @@
 const { logDebug: _, logExactErrMsg } = require("./log")
-const { urlList, redo, sendNotification } = require("./utils")
+const { urlList, redo, sendNotification, hideErrorLog } = require("./utils")
 const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
 const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const updateToFirebase = require("./firebase/updateToFirebase")
@@ -79,7 +79,7 @@ const findStore = async () => {
 }
 ;(async () => {
   try {
-    console.error = () => {}
+    hideErrorLog()
     await findStore()
   } catch (err) {
     logExactErrMsg(err)

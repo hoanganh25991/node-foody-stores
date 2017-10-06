@@ -26,6 +26,10 @@ const urlList = apiUrlList.map(lcXX => {
 
 const defer = async waitTime => await new Promise(resolve => setTimeout(resolve, waitTime * 1000))
 
+const hideErrorLog = () => {
+  console.error = () => {}
+}
+
 const redo = async callback => {
   let redoCount = 0
   let lastResult = null
@@ -44,5 +48,6 @@ module.exports = {
   todayDDMMYYY,
   urlList,
   sendNotification,
-  redo
+  redo,
+  hideErrorLog
 }
