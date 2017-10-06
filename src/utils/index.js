@@ -26,9 +26,23 @@ const urlList = apiUrlList.map(lcXX => {
 
 const defer = async waitTime => await new Promise(resolve => setTimeout(resolve, waitTime * 1000))
 
+const redo = async callback => {
+  let redoCount = 0
+  let lastResult = null
+  let shouldRun = true
+  const finish = () => (shouldRun = false)
+  do {
+    lastResult = await callback(redoCount, lastResult, finish)
+    redoCount++
+  } while (shouldRun)
+
+  return lastResult
+}
+
 module.exports = {
   defer,
   todayDDMMYYY,
   urlList,
-  sendNotification
+  sendNotification,
+  redo
 }

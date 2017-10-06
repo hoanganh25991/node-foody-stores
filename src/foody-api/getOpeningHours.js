@@ -1,7 +1,7 @@
 const { TinyPage } = require("../page")
 const urlEndPoint = "https://www.foody.vn"
 const { logDebug } = require("../log")
-const { puppeteer: { retryLimit } } = require("../_config")
+const { puppeteer: { retryLimit } } = require("../config")
 
 const getOpeningHours = limit => async storeDetailUrl => {
   let hasError = false

@@ -1,12 +1,8 @@
-const updateToFirebase = require("./firebase/updateToFirebase")
-const { logDebug, logExactErrMsg } = require("./log")
-const { urlList } = require("./utils")
-const { needStoreKeys, firebaseBranch } = require("./_config")
+const { logDebug: _, logExactErrMsg } = require("./log")
+const { urlList, redo } = require("./utils")
+const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
 const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
-const { TinyPage } = require("./page")
-
-const { mainBranch, storesBranch, storeIndexKey } = firebaseBranch
-
+const updateToFirebase = require("./firebase/updateToFirebase")
 /*
  {
  "seoData": {
@@ -20,63 +16,71 @@ const { mainBranch, storesBranch, storeIndexKey } = firebaseBranch
  "totalSubItems": 2
  }
  */
+const getFoodyStores = async urlEndpoint => {
+  _(`Search stores at url: ${urlEndpoint}`)
+  const { searchItems: foodyStores } = await callFoodyApi(urlEndpoint)
+  _(`Found: ${foodyStores.length} stores`)
+  return foodyStores
+}
+
+// _(`Searching page ${redoCount}...`, 0, "\x1b[36m%s\x1b[0m")
+
+const rebuildStore = async (originStore, needStoreKeys) => {
+  // _(`Rebuild store data, storeId: ${originStore.Id}`, 1)
+  // _(`Change store key`, 2)
+  //noinspection JSUnresolvedFunction
+  const store = needStoreKeys.reduce((carry, key) => {
+    const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
+    carry[myKey] = originStore[key]
+    return carry
+  }, {})
+
+  const { id: storeId, detailUrl: storeDetailUrl } = store
+
+  // _(`Find store 'createdDate'`, 2)
+  const createdDate = await getStoreCreatedDate(storeId)
+  Object.assign(store, { createdDate })
+
+  // _(`Find store 'phoneNumber'`, 2)
+  const phoneNumber = await getPhoneNumber(store.id)
+  Object.assign(store, { phoneNumber })
+
+  // _(`Find store 'openingHours'`, 2)
+  //noinspection JSUnresolvedVariable
+  const [openingAt, closedAt] = await getOpeningHours(storeDetailUrl)
+  Object.assign(store, { openingAt, closedAt })
+
+  // _(`Complete rebuild store`, 2)
+  // _(`Update store to firebase`, 1)
+  await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)([store])
+
+  return store
+}
+
+const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
+  const urlWithPageQuery = `${urlEndpoint}&page=${redoCount}&append=true`
+  const foodyStores = await getFoodyStores(urlWithPageQuery)
+
+  const shouldBreak = foodyStores.length == 0
+  if (shouldBreak) {
+    finish()
+    return
+  }
+
+  const storesWithNeedInfo = await foodyStores.reduce(async (carry, originStore) => {
+    const lastStoreList = await carry
+    const store = rebuildStore(originStore, needStoreKeys)
+    return [...lastStoreList, store]
+  }, [])
+
+  return storesWithNeedInfo
+}
+
 const readOne = lastSummaryTotal => async urlEndpoint => {
-  logDebug(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
-  logDebug(urlEndpoint)
-  let pageCount = 0
-  let stillHasStores = true
-  let stores = []
-
-  do {
-    pageCount++
-    const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
-    logDebug(`Searching page ${pageCount}...`, 0, "\x1b[36m%s\x1b[0m")
-
-    const res = await callFoodyApi(urlWithPageQuery)
-    const { searchItems: searchStores } = res
-    logDebug(`Search find: ${searchStores.length} stores`, 1)
-
-    if (!searchStores.length) stillHasStores = false
-
-    const storesWithNeedInfo = await searchStores.reduce(async (carry, originStore) => {
-      const lastStoreList = await carry
-      logDebug(`Rebuild store data, storeId: ${originStore.Id}`, 1)
-
-      logDebug(`Change store key`, 2)
-      //noinspection JSUnresolvedFunction
-      const store = needStoreKeys.reduce((carry, key) => {
-        const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
-        carry[myKey] = originStore[key]
-        return carry
-      }, {})
-
-      logDebug(`Find store 'createdDate'`, 2)
-      const createdDate = await getStoreCreatedDate(store.id)
-      Object.assign(store, { createdDate })
-
-      logDebug(`Find store 'phoneNumber'`, 2)
-      const phoneNumber = await getPhoneNumber(store.id)
-      Object.assign(store, { phoneNumber })
-
-      logDebug(`Find store 'openingHours'`, 2)
-      //noinspection JSUnresolvedVariable
-      const openingHours = await getOpeningHours(store.detailUrl)
-      const [openingAt, closedAt] = openingHours
-      Object.assign(store, { openingAt, closedAt })
-
-      logDebug(`Complete rebuild store`, 2)
-
-      logDebug(`Update store to firebase`, 1)
-      await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)([store])
-
-      return [...lastStoreList, store]
-    }, [])
-
-    stores = [...stores, ...storesWithNeedInfo]
-  } while (stillHasStores)
-
-  // await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)(stores)
-
+  // _(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
+  // _(urlEndpoint)
+  const stores = redo(saveStore(urlEndpoint))
+  //noinspection JSUnresolvedVariable
   const nextSummaryTotal = lastSummaryTotal + stores.length
   return nextSummaryTotal
 }
@@ -87,22 +91,19 @@ const findStore = async () => {
     const lastStores = await carry
     return readOne(lastStores)(urlEndpoint)
   }, 0)
-  logDebug(`Find ${totalStoreFound} stores`)
+  _(`Find ${totalStoreFound} stores`)
 }
 
-// (async () => {
-//   try {
-//     console.error = () => {}
-//     await findStore()
-//     await TinyPage.closeBrowser()
-//   } catch (err) {
-//     logExactErrMsg(err)
-//   } finally {
-//     // Auto re callApiUrl
-//     // setTimeout(crawling, 6000)
-//     logDebug("==============COMPLETE CRAWLING FOODY==============")
-//     process.exit()
-//   }
-// })()
+;(async () => {
+  try {
+    console.error = () => {}
+    await findStore()
+  } catch (err) {
+    logExactErrMsg(err)
+  } finally {
+    _("==============COMPLETE CRAWLING FOODY==============")
+    process.exit()
+  }
+})()
 
 module.exports = findStore

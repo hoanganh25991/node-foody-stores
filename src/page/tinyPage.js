@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer")
-const { puppeteer: puppeteerConf } = require("../_config")
+const { puppeteer: puppeteerConf } = require("../config")
 const NetworkManager = require("./NetworkManager")
 const { logDebug } = require("../log")
 
@@ -30,5 +30,9 @@ TinyPage.closeBrowser = async () => {
   let _browser = await getBrowser()
   await _browser.close()
 }
+
+process.on("beforeExit", async () => {
+  await browser.close()
+})
 
 module.exports = TinyPage
