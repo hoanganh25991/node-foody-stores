@@ -42,4 +42,14 @@ const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {
 //   process.exit()
 // })()
 
+// Add one signal branch
+// (async () => {
+//   const mainBranch = "oneSignal"
+//   const objXBranch = "channels"
+//   const objXIndexKey = "appId"
+//   const justNotifyMeChannel = { appId: "1e28d329-d699-4c8e-a4d4-1a4b91afd0f1", appName: "JustNotifyMe"}
+//   await updateObjX(mainBranch)(objXBranch)(objXIndexKey)(justNotifyMeChannel)
+//   process.exit()
+// })()
+
 module.exports = updateManyObjXs

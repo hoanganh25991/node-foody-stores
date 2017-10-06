@@ -77,6 +77,8 @@ const findStore = async () => {
   }, 0)
   _(`Find ${totalStoreFound} stores`)
 }
+
+// Run module
 ;(async () => {
   try {
     hideErrorLog()
