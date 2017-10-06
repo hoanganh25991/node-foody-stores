@@ -34,4 +34,12 @@ const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {
   }, 123)
 }
 
+// Remove stores branch
+// (async () => {
+//   const storesRef = db.ref("nodeFoodyStores/stores")
+//   await storesRef.remove()
+//   console.log("Done")
+//   process.exit()
+// })()
+
 module.exports = updateManyObjXs
