@@ -1,27 +1,8 @@
 const { logDebug: _, logExactErrMsg } = require("./log")
 const { urlList, redo } = require("./utils")
 const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
-const { callFoodyApi, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
+const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
 const updateToFirebase = require("./firebase/updateToFirebase")
-/*
- {
- "seoData": {
- "MetaTitle": "Địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM",
- "MetaKeywords": null,
- "MetaDescription": "Danh sách  hơn 51 địa điểm Ăn vặt/vỉa hè tại Quận 2, TP. HCM. Foody.vn là website #1 tại VN về tìm kiếm địa điểm, có hàng ngàn bình luận, hình ảnh"
- },
- "searchItems": [],
- "searchUrl": "/ho-chi-minh/an-vat-via-he-tai-quan-2?c=an-vat-via-he&categorygroup=food",
- "totalResult": 51,
- "totalSubItems": 2
- }
- */
-const getFoodyStores = async urlEndpoint => {
-  _(`Search stores at url: ${urlEndpoint}`)
-  const { searchItems: foodyStores } = await callFoodyApi(urlEndpoint)
-  _(`Found: ${foodyStores.length} stores`)
-  return foodyStores
-}
 
 // _(`Searching page ${redoCount}...`, 0, "\x1b[36m%s\x1b[0m")
 
@@ -58,7 +39,9 @@ const rebuildStore = async (originStore, needStoreKeys) => {
 }
 
 const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
-  const urlWithPageQuery = `${urlEndpoint}&page=${redoCount}&append=true`
+  const pageCount = redoCount + 1
+  const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
+
   const foodyStores = await getFoodyStores(urlWithPageQuery)
 
   const shouldBreak = foodyStores.length == 0
@@ -79,7 +62,7 @@ const saveStore = urlEndpoint => async (redoCount, lastResult, finish) => {
 const readOne = lastSummaryTotal => async urlEndpoint => {
   // _(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
   // _(urlEndpoint)
-  const stores = redo(saveStore(urlEndpoint))
+  const stores = await redo(saveStore(urlEndpoint))
   //noinspection JSUnresolvedVariable
   const nextSummaryTotal = lastSummaryTotal + stores.length
   return nextSummaryTotal
@@ -93,7 +76,6 @@ const findStore = async () => {
   }, 0)
   _(`Find ${totalStoreFound} stores`)
 }
-
 ;(async () => {
   try {
     console.error = () => {}
