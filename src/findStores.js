@@ -46,6 +46,7 @@ const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 
   logDebug(lx)(`Find stores`)
   const foodyStores = await getFoodyStores(urlWithPageQuery)
+  logDebug(lx)(`Found ${foodyStores.length} stores`)
 
   const shouldBreak = foodyStores.length == 0
   if (shouldBreak) {
@@ -55,7 +56,6 @@ const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 
   const storesWithNeedInfo = await foodyStores.reduce(async (carry, originStore) => {
     const lastStoreList = await carry
-
     logDebug(lx)(`Rebuild store`)
     const store = await rebuildStore(originStore, needStoreKeys)
     return [...lastStoreList, store]

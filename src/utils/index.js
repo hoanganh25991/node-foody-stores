@@ -1,5 +1,6 @@
 const apiUrlList = require("../storage/api-list.test.json")
 const sendNotification = require("./sendNotification")
+const { logDebug } = require("../log")
 
 const todayDDMMYYY = () => {
   var today = new Date()
@@ -31,11 +32,13 @@ const hideErrorLog = () => {
 }
 
 const redo = async callback => {
+  const lx = logDebug.indent(0)
   let redoCount = 0
   let lastResult = null
   let shouldRun = true
   const finish = () => (shouldRun = false)
   do {
+    logDebug(lx)("Redo")
     lastResult = await callback(redoCount, lastResult, finish)
     redoCount++
   } while (shouldRun)
