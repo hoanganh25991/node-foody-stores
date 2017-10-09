@@ -10,10 +10,10 @@ const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } =
 // _(`Searching page ${redoCount}...`, 0, "\x1b[36m%s\x1b[0m")
 
 const rebuildStore = async (originStore, needStoreKeys) => {
-  // console.log(`Rebuild store data, storeId: ${originStore.Id}`)
-  // console.log("xxx", logLevel)
+  const lx = _.indent(1)
+  _(lx)(`StoreId: ${originStore.Id}`)
   //
-  // _(1, { logLevel })(`Update store key`)
+  _(lx)(`Update store key`)
   //noinspection JSUnresolvedFunction
   const store = needStoreKeys.reduce((carry, key) => {
     const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
@@ -23,30 +23,33 @@ const rebuildStore = async (originStore, needStoreKeys) => {
 
   const { id: storeId, detailUrl: storeDetailUrl } = store
 
-  // console.log(`Find 'createdDate'`)
+  _(lx)(`Find 'createdDate'`)
   const createdDate = await getStoreCreatedDate(storeId)
   Object.assign(store, { createdDate })
 
-  // console.log(`Find 'phoneNumber'`)
+  _(lx)(`Find 'phoneNumber'`)
   const phoneNumber = await getPhoneNumber(store.id)
   Object.assign(store, { phoneNumber })
 
-  // console.log(`Find 'openingHours'`)
+  _(lx)(`Find 'openingHours'`)
   //noinspection JSUnresolvedVariable
   const [openingAt, closedAt] = await getOpeningHours(storeDetailUrl)
   Object.assign(store, { openingAt, closedAt })
 
-  // _(1, { logLevel })(`Update to firebase`)
+  _(lx)(`Update to firebase`)
   await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)([store])
 
   return store
 }
 
 const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
+  const lx = _.indent(1)
   const pageCount = redoCount + 1
   const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
 
+  _(lx)(`Page: ${pageCount}`)
   const foodyStores = await getFoodyStores(urlWithPageQuery)
+  _(lx)(`Found ${foodyStores.length} stores`)
 
   const shouldBreak = foodyStores.length == 0
   if (shouldBreak) {
@@ -56,6 +59,7 @@ const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 
   const storesWithNeedInfo = await foodyStores.reduce(async (carry, originStore) => {
     const lastStoreList = await carry
+    _(lx)(`Rebuild store`)
     const store = await rebuildStore(originStore, needStoreKeys)
     return [...lastStoreList, store]
   }, [])
@@ -65,7 +69,8 @@ const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 }
 
 const crawlingStoresFromApiUrl = lastTotal => async urlEndpoint => {
-  // _(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
+  const lx = _.indent(1)
+  _(lx)(`Crawling stores at MAIN url: ${urlEndpoint}`)
   // _(urlEndpoint)
   const stores = await redo(crawlingStores(urlEndpoint))
   //noinspection JSUnresolvedVariable
@@ -74,15 +79,16 @@ const crawlingStoresFromApiUrl = lastTotal => async urlEndpoint => {
 }
 
 const findStores = async () => {
-  console.log(`Find stores`)
+  const lS = _.indent(1)
 
+  _(lS)(`Find stores`)
   //noinspection JSUnresolvedFunction
   const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
     const lastTotal = await carry
     return crawlingStoresFromApiUrl(lastTotal)(urlEndpoint)
   }, 0)
 
-  // _(0, { logLevel })(`Summary: Find ${totalStoreFound} stores`)
+  _(lS)(`Summary: Find ${totalStoreFound} stores`)
 }
 
 // Run module

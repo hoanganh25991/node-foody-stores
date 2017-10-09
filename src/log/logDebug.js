@@ -1,7 +1,7 @@
 const store = require("../store")
 
 const logWithInfo = require("./logInfo")
-const logDebug = (addUp = 0, nextState = null) => (logs, style = "%s") => {
+const logDebug = (state = null) => (logs, style = "%s") => {
   const { debugLogLevel = 10 } = store.getState()
 
   const debug = process.env.DEBUG
@@ -10,7 +10,9 @@ const logDebug = (addUp = 0, nextState = null) => (logs, style = "%s") => {
   const shouldDebug = debug && debug != "false"
   const allowedLogLevel = logLevel <= debugLogLevel
   const shouldLog = shouldDebug && allowedLogLevel
-  console.log("shouldLog", shouldLog)
-  if (shouldLog) logWithInfo(addUp, nextState)(logs, style)
+  if (shouldLog) logWithInfo(state)(logs, style)
 }
+
+logDebug.indent = logWithInfo.indent
+
 module.exports = logDebug
