@@ -11,6 +11,7 @@ const getLogState = (addUp = 0, nextState = null) => {
   const { logLevel: currLogLevel } = logState
   const logLevel = currLogLevel + addUp
   Object.assign(logState, { logLevel })
+  console.log(JSON.stringify(logState))
   return logState
 }
 
@@ -24,8 +25,8 @@ const getPadding = (addUp = 0, nextState = null) => {
 }
 
 const logInfo = (addUp = 0, nextState = null) => (logs, style = "%s") => {
-  const padding = getPadding(nextState)
-  const { logLevel } = padding
+  const padding = getPadding(addUp, nextState)
+  const { logLevel } = getLogState(addUp, nextState)
   const paddingWithRootSlash = logLevel > 0 ? `${padding}\\__` : padding
 
   const isArr = Array.isArray(logs)
@@ -48,6 +49,8 @@ const logInfo = (addUp = 0, nextState = null) => (logs, style = "%s") => {
 
   return logLevel
 }
+
+store.setState({ [logKey]: defaultLogState })
 
 logInfo.getDefaultState = () => defaultLogState
 logInfo.getLogKey = () => logKey

@@ -11,6 +11,7 @@ const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } =
 
 const rebuildStore = async (originStore, needStoreKeys) => {
   const logLevel = _(1)(`Rebuild store data, storeId: ${originStore.Id}`)
+  console.log("xxx", logLevel)
 
   _(1, { logLevel })(`Update store key`)
   //noinspection JSUnresolvedFunction
@@ -55,7 +56,7 @@ const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 
   const storesWithNeedInfo = await foodyStores.reduce(async (carry, originStore) => {
     const lastStoreList = await carry
-    const store = rebuildStore(originStore, needStoreKeys)
+    const store = await rebuildStore(originStore, needStoreKeys)
     return [...lastStoreList, store]
   }, [])
 
@@ -87,8 +88,8 @@ const findStores = async () => {
 ;(async () => {
   try {
     hideErrorLog()
-    // await findStores()
-    await logAwait(findStores, null, "Find store")
+    await findStores()
+    // await logAwait(findStores, null, "Find store")
   } catch (err) {
     logErr(err)
   } finally {
