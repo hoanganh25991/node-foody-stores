@@ -1,10 +1,10 @@
 const logInfo = require("./logInfo")
-var logSingleLine = require("single-line-log").stdout
+const logSingleLine = require("single-line-log").stdout
+const limit = 50
 
-const logAwait = async (callback, args, taskName = "No task name") => {
+const logAwait = async (callback, taskName = "No task name") => {
   console.time(taskName)
   let count = 0
-  const limit = 100
   const timeId = setInterval(() => {
     count++
 
@@ -13,9 +13,10 @@ const logAwait = async (callback, args, taskName = "No task name") => {
     }
     var percentage = Math.floor(100 * count / limit)
     const percent = Array(count + 1).join("#")
-    logSingleLine(`Writing to super large file\n[${percentage}%]`, percent)
-  }, 300)
-  const result = await callback(args)
+    const padding = logInfo.getPadding()
+    logSingleLine(`${padding}${taskName}\n${padding}[${percentage}%]`, percent)
+  }, 500)
+  const result = await callback()
   clearInterval(timeId)
   console.timeEnd(taskName)
   logSingleLine.clear()
