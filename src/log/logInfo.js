@@ -1,7 +1,14 @@
 const store = require("../store")
+const logKey = "_log"
+const defaultLogState = {
+  logLevel: 1,
+  spaceIndent: 2
+}
 
-const logInfo = (logs, style = "%s") => {
-  const { logLevel = 1, spaceIndent = 2 } = store.getState()
+const logInfo = (nextState = null) => (logs, style = "%s") => {
+  const { [logKey]: prevState = defaultLogState } = store.getState()
+  const logState = Object.assign(prevState, nextState)
+  const { logLevel, spaceIndent } = logState
 
   const padding = Array(logLevel * spaceIndent + 1).join(" ")
   const paddingWithRootSlash = logLevel > 0 ? `${padding}\\__` : padding
@@ -26,5 +33,8 @@ const logInfo = (logs, style = "%s") => {
 
   return
 }
+
+logInfo.getDefaultState = () => defaultLogState
+logInfo.getLogKey = () => logKey
 
 module.exports = logInfo

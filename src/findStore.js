@@ -1,8 +1,11 @@
 const { logDebug: _, logErr, logAwait } = require("./log")
 const { urlList, redo, sendNotification, hideErrorLog } = require("./utils")
-const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = require("./config")
-const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = require("./foody-api")
+const config = require("./config")
+const foodyApi = require("./foody-api")
 const updateToFirebase = require("./firebase/updateToFirebase")
+
+const { needStoreKeys, firebaseBranch: { mainBranch, storesBranch, storeIndexKey } } = config
+const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } = foodyApi
 
 // _(`Searching page ${redoCount}...`, 0, "\x1b[36m%s\x1b[0m")
 
@@ -38,7 +41,7 @@ const rebuildStore = async (originStore, needStoreKeys) => {
   return store
 }
 
-const saveStores = urlEndpoint => async (redoCount, lastResult, finish) => {
+const crawlingStores = urlEndpoint => async (redoCount, lastResult, finish) => {
   const pageCount = redoCount + 1
   const urlWithPageQuery = `${urlEndpoint}&page=${pageCount}&append=true`
 
@@ -63,7 +66,7 @@ const saveStores = urlEndpoint => async (redoCount, lastResult, finish) => {
 const crawlingStoresFromApiUrl = lastTotal => async urlEndpoint => {
   // _(`Crawling stores at MAIN url`, 0, "\x1b[41m%s\x1b[0m")
   // _(urlEndpoint)
-  const stores = await redo(saveStores(urlEndpoint))
+  const stores = await redo(crawlingStores(urlEndpoint))
   //noinspection JSUnresolvedVariable
   const nextSummaryTotal = lastTotal + stores.length
   return nextSummaryTotal

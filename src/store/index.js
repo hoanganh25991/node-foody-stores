@@ -1,13 +1,20 @@
 const state = {}
 const argv = require("minimist")(process.argv.slice(2))
-const { logDebug: _ } = require("../log")
 
-// try{
-//   const initStateFilePath = argv["state"]
-//   const fullPath = `${__dirname}/../../${initStateFilePath}`
-//
-//   const initState = require()
-// }
+const getInitState = () => {
+  try {
+    const initStateFilePath = argv["stateJson"]
+    const fullPath = `${__dirname}/../../${initStateFilePath}`
+    const initState = require(fullPath)
+    return initState
+  } catch (err) {
+    return {}
+  }
+}
+
+const initState = getInitState
+
+Object.assign(state, initState)
 
 const store = {
   getState() {
