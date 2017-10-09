@@ -5,13 +5,16 @@ const defaultLogState = {
   spaceIndent: 2
 }
 
-const getLogState = (nextState = null) => {
-  const { [logKey]: prevState = defaultLogState } = store.getState()
-  const logState = Object.assign(prevState, nextState)
+const getLogState = (addUp = 0, nextState = null) => {
+  const { [logKey]: currState = defaultLogState } = store.getState()
+  const logState = Object.assign(currState, nextState)
+  const { logLevel: currLogLevel } = logState
+  const logLevel = currLogLevel + addUp
+  Object.assign(logState, { logLevel })
   return logState
 }
 
-const getPadding = (nextState = null) => {
+const getPadding = (addUp = 0, nextState = null) => {
   const logState = getLogState(nextState)
   const { logLevel, spaceIndent } = logState
 
@@ -20,7 +23,7 @@ const getPadding = (nextState = null) => {
   return padding
 }
 
-const logInfo = (nextState = null) => (logs, style = "%s") => {
+const logInfo = (addUp = 0, nextState = null) => (logs, style = "%s") => {
   const padding = getPadding(nextState)
   const { logLevel } = padding
   const paddingWithRootSlash = logLevel > 0 ? `${padding}\\__` : padding
@@ -43,7 +46,7 @@ const logInfo = (nextState = null) => (logs, style = "%s") => {
     }
   }
 
-  return
+  return logLevel
 }
 
 logInfo.getDefaultState = () => defaultLogState
