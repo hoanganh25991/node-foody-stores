@@ -1,4 +1,4 @@
-const { logDebug, logExactErrMsg } = require("./../log/index")
+const { logDebug } = require("./../log/index")
 const admin = require("firebase-admin")
 const serviceAccount = require("./../.credential/glass-turbine.json")
 admin.initializeApp({
@@ -8,6 +8,7 @@ admin.initializeApp({
 const db = admin.database()
 
 const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
+  const lx = logDebug.indent(1)
   // Find if post exist
   const { [objXIndexKey]: id } = objX
   const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}`)
@@ -20,11 +21,12 @@ const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
         resolve(snapshot.val())
       })
   })
+
   const objXKey = sameObjX ? Object.keys(sameObjX)[0] : refToObjXBranch.push().key
-  logDebug(`Saving store...`)
-  logDebug([`ObjX ${objXIndexKey} : ${id}`, `ObjX key: ${objXKey}`], 1)
+  logDebug(lx)(`Saving store...`)
+  logDebug(lx)(`ObjX ${objXIndexKey} : ${id}`)
+  logDebug(lx)(`ObjX key: ${objXKey}`)
   await db.ref(`${mainBranch}/${objXBranch}/${objXKey}`).update(objX)
-  logDebug("Saved")
 }
 
 const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {

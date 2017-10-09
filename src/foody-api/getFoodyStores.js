@@ -23,10 +23,7 @@ const callFoodyApi = require("./callFoodyApi")
   }
  */
 const getFoodyStores = async urlEndpoint => {
-  // _(`Get foody stores at: ${urlEndpoint}`)
   const { searchItems: foodyStores } = await callFoodyApi(urlEndpoint)
-
-  // _(`Found: ${foodyStores.length} stores`)
   return foodyStores
 }
 
