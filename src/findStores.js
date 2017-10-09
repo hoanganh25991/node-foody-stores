@@ -10,10 +10,10 @@ const { getFoodyStores, getOpeningHours, getPhoneNumber, getStoreCreatedDate } =
 // _(`Searching page ${redoCount}...`, 0, "\x1b[36m%s\x1b[0m")
 
 const rebuildStore = async (originStore, needStoreKeys) => {
-  const logLevel = _(1)(`Rebuild store data, storeId: ${originStore.Id}`)
-  console.log("xxx", logLevel)
-
-  _(1, { logLevel })(`Update store key`)
+  // console.log(`Rebuild store data, storeId: ${originStore.Id}`)
+  // console.log("xxx", logLevel)
+  //
+  // _(1, { logLevel })(`Update store key`)
   //noinspection JSUnresolvedFunction
   const store = needStoreKeys.reduce((carry, key) => {
     const myKey = key.charAt(0).toLocaleLowerCase() + key.substring(1)
@@ -23,20 +23,20 @@ const rebuildStore = async (originStore, needStoreKeys) => {
 
   const { id: storeId, detailUrl: storeDetailUrl } = store
 
-  _(1, { logLevel })(`Find 'createdDate'`)
+  // console.log(`Find 'createdDate'`)
   const createdDate = await getStoreCreatedDate(storeId)
   Object.assign(store, { createdDate })
 
-  _(1, { logLevel })(`Find 'phoneNumber'`)
+  // console.log(`Find 'phoneNumber'`)
   const phoneNumber = await getPhoneNumber(store.id)
   Object.assign(store, { phoneNumber })
 
-  _(1, { logLevel })(`Find 'openingHours'`)
+  // console.log(`Find 'openingHours'`)
   //noinspection JSUnresolvedVariable
   const [openingAt, closedAt] = await getOpeningHours(storeDetailUrl)
   Object.assign(store, { openingAt, closedAt })
 
-  _(1, { logLevel })(`Update to firebase`)
+  // _(1, { logLevel })(`Update to firebase`)
   await updateToFirebase(mainBranch)(storesBranch)(storeIndexKey)([store])
 
   return store
@@ -74,14 +74,15 @@ const crawlingStoresFromApiUrl = lastTotal => async urlEndpoint => {
 }
 
 const findStores = async () => {
-  const logLevel = _()(`Find stores`)
+  console.log(`Find stores`)
+
   //noinspection JSUnresolvedFunction
   const totalStoreFound = await urlList.reduce(async (carry, urlEndpoint) => {
     const lastTotal = await carry
     return crawlingStoresFromApiUrl(lastTotal)(urlEndpoint)
   }, 0)
 
-  _(0, { logLevel })(`Summary: Find ${totalStoreFound} stores`)
+  // _(0, { logLevel })(`Summary: Find ${totalStoreFound} stores`)
 }
 
 // Run module
